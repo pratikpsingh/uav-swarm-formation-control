@@ -216,3 +216,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local experiment artifacts (metadata summaries belong in version control)
+artifacts/
+checkpoints/
+outputs/
+wandb/
+mlruns/
+
+# Local environment overrides and editor settings
+.idea/
+.vscode/
+*.local.yaml
+
+learning/
+plan/
