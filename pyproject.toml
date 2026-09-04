@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "numpy>=2.3",
+    "pyyaml>=6.0.2",
 ]
 
 [project.scripts]
@@ -22,6 +23,7 @@ dev = [
     "pytest>=8.4",
     "pytest-cov>=6.2",
     "ruff>=0.12",
+    "types-pyyaml>=6.0.12.20250822",
 ]
 
 [tool.pytest.ini_options]

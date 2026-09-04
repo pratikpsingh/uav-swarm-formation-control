@@ -1,0 +1,19 @@
+schema_version: 1
+name: triangle-kinematic-smoke
+seed: 20260905
+
+formation:
+  kind: triangle
+  num_agents: 3
+  spacing_m: 1.0
+  center_m: [0.0, 0.0, 1.0]
+  euler_radians: [0.0, 0.0, 0.0]
+
+environment:
+  time_step_seconds: 0.1
+  max_episode_steps: 500
+  max_velocity_component_mps: 2.0
+
+observation:
+  max_neighbors: 2
+  neighbor_radius_m: null

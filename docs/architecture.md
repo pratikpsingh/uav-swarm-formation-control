@@ -40,5 +40,6 @@ observations.
 - `observations`: local observations, centralized state, masks, and normalization.
 - `rewards`: individually testable reward components and composition.
 
-Stage 0 declares these package boundaries but implements only the package root, CLI, and logging
-foundation. Domain behavior will be added one tested stage at a time.
+Stage 1 implements simulator-independent formation geometry. Stage 2 implements typed multi-agent
+observations, actions, lifecycle results, deterministic seeding, and validated experiment
+configuration. Concrete environment dynamics and reward behavior remain Stage 3 work.

@@ -5,11 +5,13 @@ multi-agent reinforcement-learning methods.
 
 ## Project status
 
-The project is being built in small, reviewable stages. The current package provides validated,
-simulator-independent 2D and 3D formation templates, full rigid transformations, and explicit
-position and shape metrics. It does not yet contain a simulator or reinforcement-learning algorithm.
+The project is being built in small, reviewable stages. The current package provides validated
+formation geometry, simulator-independent multi-agent data contracts, deterministic random streams,
+and strict experiment configuration. It does not yet contain a concrete environment or
+reinforcement-learning algorithm.
 
-See [the formation geometry contract](docs/formations.md) for the current public API.
+See [the formation geometry contract](docs/formations.md) and
+[the multi-agent contract](docs/multi-agent-contracts.md) for the current public APIs.
 
 ## Requirements
 

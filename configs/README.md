@@ -11,6 +11,18 @@ configs/
 └── task/          Formation, goal, obstacle, observation, and reward settings
 ```
 
-No configuration loader or schema is selected in Stage 0. We will define the domain objects and
-validation requirements first, then choose the smallest tool that satisfies them. Local machine
-overrides should use the suffix `.local.yaml`, which Git ignores.
+Stage 2 uses immutable Python dataclasses as the schema and PyYAML's safe loader for serialization.
+Unknown keys and invalid cross-field combinations are rejected. Each experiment is currently one
+self-contained YAML file, making every scientific choice visible without following an inheritance
+graph.
+
+The first schema contains:
+
+- schema_version, experiment name, and root seed;
+- formation kind, count, spacing, center, and Euler orientation;
+- control time step, episode horizon, and per-axis velocity limit;
+- maximum neighbor slots and an optional sensing radius.
+
+See [experiment/triangle_kinematic.yaml](experiment/triangle_kinematic.yaml) for a complete example.
+A composition framework will be considered only when Stage 4 introduces repeated algorithm
+settings. Local machine overrides should use the suffix .local.yaml, which Git ignores.

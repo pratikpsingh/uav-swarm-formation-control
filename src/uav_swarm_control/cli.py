@@ -28,4 +28,4 @@ def main(argv: Sequence[str] | None = None) -> None:
     """Run the currently available project command."""
     args = build_parser().parse_args(argv)
     configure_logging(LogLevel(args.log_level))
-    LOGGER.info("Project foundation is ready; no training command exists yet.")
+    LOGGER.info("Geometry and multi-agent contracts are ready; no environment exists yet.")
