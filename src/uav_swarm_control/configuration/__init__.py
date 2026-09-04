@@ -9,7 +9,10 @@ from uav_swarm_control.configuration.models import (
     EnvironmentConfig,
     ExperimentConfig,
     FormationConfig,
+    KinematicTaskConfig,
     ObservationConfig,
+    ProportionalControllerConfig,
+    RewardConfig,
     experiment_config_to_dict,
 )
 
@@ -18,7 +21,10 @@ __all__ = [
     "EnvironmentConfig",
     "ExperimentConfig",
     "FormationConfig",
+    "KinematicTaskConfig",
     "ObservationConfig",
+    "ProportionalControllerConfig",
+    "RewardConfig",
     "experiment_config_from_mapping",
     "experiment_config_to_dict",
     "load_experiment_config",

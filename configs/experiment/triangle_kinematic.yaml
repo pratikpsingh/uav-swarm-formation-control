@@ -17,3 +17,21 @@ environment:
 observation:
   max_neighbors: 2
   neighbor_radius_m: null
+
+task:
+  initial_center_m: [-2.0, 0.0, 1.0]
+  initial_position_noise_m: 0.05
+  success_tolerance_m: 0.05
+  success_hold_steps: 5
+  collision_distance_m: 0.2
+  terminate_on_collision: true
+
+reward:
+  navigation_weight: 1.0
+  formation_weight: 0.5
+  collision_penalty: 5.0
+  smoothness_weight: 0.05
+  success_bonus: 10.0
+
+controller:
+  gain_per_second: 1.5

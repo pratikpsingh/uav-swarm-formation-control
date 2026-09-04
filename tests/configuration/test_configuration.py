@@ -55,6 +55,9 @@ def test_repository_example_configuration_loads() -> None:
 
     assert config.name == "triangle-kinematic-smoke"
     assert config.seed == 20260905
+    assert config.task.success_hold_steps == 5
+    assert config.reward.success_bonus == 10.0
+    assert config.controller.gain_per_second == 1.5
 
 
 def test_optional_formation_pose_has_explicit_defaults() -> None:
@@ -85,6 +88,14 @@ def test_neighbor_capacity_cannot_exceed_available_agents() -> None:
     observation["max_neighbors"] = 3
 
     with pytest.raises(ConfigurationError, match="num_agents - 1"):
+        experiment_config_from_mapping(values)
+
+
+def test_collision_distance_must_keep_target_formation_collision_free() -> None:
+    values = _valid_mapping()
+    values["task"] = {"collision_distance_m": 1.0}
+
+    with pytest.raises(ConfigurationError, match="target formation is collision-free"):
         experiment_config_from_mapping(values)
 
 

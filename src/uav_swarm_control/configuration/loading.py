@@ -11,7 +11,10 @@ from uav_swarm_control.configuration.models import (
     EnvironmentConfig,
     ExperimentConfig,
     FormationConfig,
+    KinematicTaskConfig,
     ObservationConfig,
+    ProportionalControllerConfig,
+    RewardConfig,
     Vector3,
 )
 from uav_swarm_control.formations import FormationKind
@@ -63,6 +66,12 @@ def _string(value: object, *, path: str) -> str:
     return value
 
 
+def _boolean(value: object, *, path: str) -> bool:
+    if not isinstance(value, bool):
+        raise ConfigurationError(f"{path} must be a boolean.")
+    return value
+
+
 def _formation_kind(value: object) -> FormationKind:
     text = _string(value, path="formation.kind")
     try:
@@ -99,6 +108,7 @@ def experiment_config_from_mapping(value: object) -> ExperimentConfig:
             "environment",
             "observation",
         },
+        optional={"task", "reward", "controller"},
     )
 
     formation = _mapping(root["formation"], path="formation")
@@ -164,6 +174,96 @@ def experiment_config_from_mapping(value: object) -> ExperimentConfig:
         neighbor_radius_m=radius,
     )
 
+    task = _mapping(root.get("task", {}), path="task")
+    _validate_keys(
+        task,
+        path="task",
+        required=set(),
+        optional={
+            "initial_center_m",
+            "initial_position_noise_m",
+            "success_tolerance_m",
+            "success_hold_steps",
+            "collision_distance_m",
+            "terminate_on_collision",
+        },
+    )
+    task_defaults = KinematicTaskConfig()
+    task_config = KinematicTaskConfig(
+        initial_center_m=_vector3(
+            task.get("initial_center_m", list(task_defaults.initial_center_m)),
+            path="task.initial_center_m",
+        ),
+        initial_position_noise_m=_number(
+            task.get("initial_position_noise_m", task_defaults.initial_position_noise_m),
+            path="task.initial_position_noise_m",
+        ),
+        success_tolerance_m=_number(
+            task.get("success_tolerance_m", task_defaults.success_tolerance_m),
+            path="task.success_tolerance_m",
+        ),
+        success_hold_steps=_integer(
+            task.get("success_hold_steps", task_defaults.success_hold_steps),
+            path="task.success_hold_steps",
+        ),
+        collision_distance_m=_number(
+            task.get("collision_distance_m", task_defaults.collision_distance_m),
+            path="task.collision_distance_m",
+        ),
+        terminate_on_collision=_boolean(
+            task.get("terminate_on_collision", task_defaults.terminate_on_collision),
+            path="task.terminate_on_collision",
+        ),
+    )
+
+    reward = _mapping(root.get("reward", {}), path="reward")
+    reward_fields = {
+        "navigation_weight",
+        "formation_weight",
+        "collision_penalty",
+        "smoothness_weight",
+        "success_bonus",
+    }
+    _validate_keys(reward, path="reward", required=set(), optional=reward_fields)
+    reward_defaults = RewardConfig()
+    reward_config = RewardConfig(
+        navigation_weight=_number(
+            reward.get("navigation_weight", reward_defaults.navigation_weight),
+            path="reward.navigation_weight",
+        ),
+        formation_weight=_number(
+            reward.get("formation_weight", reward_defaults.formation_weight),
+            path="reward.formation_weight",
+        ),
+        collision_penalty=_number(
+            reward.get("collision_penalty", reward_defaults.collision_penalty),
+            path="reward.collision_penalty",
+        ),
+        smoothness_weight=_number(
+            reward.get("smoothness_weight", reward_defaults.smoothness_weight),
+            path="reward.smoothness_weight",
+        ),
+        success_bonus=_number(
+            reward.get("success_bonus", reward_defaults.success_bonus),
+            path="reward.success_bonus",
+        ),
+    )
+
+    controller = _mapping(root.get("controller", {}), path="controller")
+    _validate_keys(
+        controller,
+        path="controller",
+        required=set(),
+        optional={"gain_per_second"},
+    )
+    controller_defaults = ProportionalControllerConfig()
+    controller_config = ProportionalControllerConfig(
+        gain_per_second=_number(
+            controller.get("gain_per_second", controller_defaults.gain_per_second),
+            path="controller.gain_per_second",
+        )
+    )
+
     return ExperimentConfig(
         schema_version=_integer(root["schema_version"], path="schema_version"),
         name=_string(root["name"], path="name"),
@@ -171,6 +271,9 @@ def experiment_config_from_mapping(value: object) -> ExperimentConfig:
         formation=formation_config,
         environment=environment_config,
         observation=observation_config,
+        task=task_config,
+        reward=reward_config,
+        controller=controller_config,
     )
 
 

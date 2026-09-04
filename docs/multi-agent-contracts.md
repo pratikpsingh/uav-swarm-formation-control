@@ -25,7 +25,8 @@ LocalObservations keeps ego and neighbor information structurally separate:
 | neighbor_mask | (N, K) | bool | True only where a neighbor slot is valid |
 
 N is the number of agents, E is the ego feature count, K is the configured neighbor capacity, and F
-is the neighbor feature count. Stage 3 will define the first concrete feature schema.
+is the neighbor feature count. The Stage 3 kinematic environment uses E = 6 and F = 6: relative
+assigned-target position and velocity for ego, and relative position and velocity for neighbors.
 
 Invalid neighbor slots are zero padded. The mask, rather than the numerical padding value, states
 whether a slot is valid. Keeping a separate neighbor axis allows a later permutation-invariant

@@ -2,7 +2,7 @@
 
 import math
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import cast
 
 from uav_swarm_control.formations import FormationKind, create_formation
@@ -34,6 +34,19 @@ def _finite_float(value: object, *, name: str, positive: bool = False) -> float:
     if positive and result <= 0.0:
         raise ConfigurationError(f"{name} must be greater than zero.")
     return result
+
+
+def _non_negative_float(value: object, *, name: str) -> float:
+    result = _finite_float(value, name=name)
+    if result < 0.0:
+        raise ConfigurationError(f"{name} must be non-negative.")
+    return result
+
+
+def _boolean(value: object, *, name: str) -> bool:
+    if not isinstance(value, bool):
+        raise ConfigurationError(f"{name} must be a boolean.")
+    return value
 
 
 def _vector3(value: object, *, name: str) -> Vector3:
@@ -147,6 +160,107 @@ class ObservationConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class KinematicTaskConfig:
+    """Initial-state sampling and episode completion rules."""
+
+    initial_center_m: Vector3 = (-2.0, 0.0, 1.0)
+    initial_position_noise_m: float = 0.05
+    success_tolerance_m: float = 0.05
+    success_hold_steps: int = 5
+    collision_distance_m: float = 0.2
+    terminate_on_collision: bool = True
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "initial_center_m",
+            _vector3(self.initial_center_m, name="task.initial_center_m"),
+        )
+        object.__setattr__(
+            self,
+            "initial_position_noise_m",
+            _non_negative_float(
+                self.initial_position_noise_m,
+                name="task.initial_position_noise_m",
+            ),
+        )
+        object.__setattr__(
+            self,
+            "success_tolerance_m",
+            _finite_float(
+                self.success_tolerance_m,
+                name="task.success_tolerance_m",
+                positive=True,
+            ),
+        )
+        object.__setattr__(
+            self,
+            "success_hold_steps",
+            _integer(self.success_hold_steps, name="task.success_hold_steps", minimum=1),
+        )
+        object.__setattr__(
+            self,
+            "collision_distance_m",
+            _finite_float(
+                self.collision_distance_m,
+                name="task.collision_distance_m",
+                positive=True,
+            ),
+        )
+        object.__setattr__(
+            self,
+            "terminate_on_collision",
+            _boolean(self.terminate_on_collision, name="task.terminate_on_collision"),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class RewardConfig:
+    """Weights for individually reported reward components."""
+
+    navigation_weight: float = 1.0
+    formation_weight: float = 0.5
+    collision_penalty: float = 5.0
+    smoothness_weight: float = 0.05
+    success_bonus: float = 10.0
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "navigation_weight",
+            "formation_weight",
+            "collision_penalty",
+            "smoothness_weight",
+            "success_bonus",
+        ):
+            object.__setattr__(
+                self,
+                field_name,
+                _non_negative_float(
+                    getattr(self, field_name),
+                    name=f"reward.{field_name}",
+                ),
+            )
+
+
+@dataclass(frozen=True, slots=True)
+class ProportionalControllerConfig:
+    """Gain for the deterministic scripted baseline."""
+
+    gain_per_second: float = 1.5
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "gain_per_second",
+            _finite_float(
+                self.gain_per_second,
+                name="controller.gain_per_second",
+                positive=True,
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class ExperimentConfig:
     """Top-level configuration required to reproduce one environment run."""
 
@@ -156,6 +270,9 @@ class ExperimentConfig:
     formation: FormationConfig
     environment: EnvironmentConfig
     observation: ObservationConfig
+    task: KinematicTaskConfig = field(default_factory=KinematicTaskConfig)
+    reward: RewardConfig = field(default_factory=RewardConfig)
+    controller: ProportionalControllerConfig = field(default_factory=ProportionalControllerConfig)
 
     def __post_init__(self) -> None:
         version = _integer(self.schema_version, name="schema_version", minimum=1)
@@ -176,6 +293,11 @@ class ExperimentConfig:
                 "observation.max_neighbors cannot exceed num_agents - 1; "
                 f"received {self.observation.max_neighbors} for "
                 f"{self.formation.num_agents} agents."
+            )
+        if self.task.collision_distance_m >= self.formation.spacing_m:
+            raise ConfigurationError(
+                "task.collision_distance_m must be smaller than formation.spacing_m so the "
+                "target formation is collision-free."
             )
         object.__setattr__(self, "schema_version", version)
         object.__setattr__(self, "seed", seed)
@@ -202,5 +324,23 @@ def experiment_config_to_dict(config: ExperimentConfig) -> dict[str, object]:
         "observation": {
             "max_neighbors": config.observation.max_neighbors,
             "neighbor_radius_m": config.observation.neighbor_radius_m,
+        },
+        "task": {
+            "initial_center_m": list(config.task.initial_center_m),
+            "initial_position_noise_m": config.task.initial_position_noise_m,
+            "success_tolerance_m": config.task.success_tolerance_m,
+            "success_hold_steps": config.task.success_hold_steps,
+            "collision_distance_m": config.task.collision_distance_m,
+            "terminate_on_collision": config.task.terminate_on_collision,
+        },
+        "reward": {
+            "navigation_weight": config.reward.navigation_weight,
+            "formation_weight": config.reward.formation_weight,
+            "collision_penalty": config.reward.collision_penalty,
+            "smoothness_weight": config.reward.smoothness_weight,
+            "success_bonus": config.reward.success_bonus,
+        },
+        "controller": {
+            "gain_per_second": config.controller.gain_per_second,
         },
     }

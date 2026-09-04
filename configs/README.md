@@ -22,6 +22,9 @@ The first schema contains:
 - formation kind, count, spacing, center, and Euler orientation;
 - control time step, episode horizon, and per-axis velocity limit;
 - maximum neighbor slots and an optional sensing radius.
+- initial-state sampling, success, and collision rules;
+- explicit reward-component weights;
+- the scripted proportional-controller gain.
 
 See [experiment/triangle_kinematic.yaml](experiment/triangle_kinematic.yaml) for a complete example.
 A composition framework will be considered only when Stage 4 introduces repeated algorithm

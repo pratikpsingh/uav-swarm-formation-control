@@ -42,4 +42,6 @@ observations.
 
 Stage 1 implements simulator-independent formation geometry. Stage 2 implements typed multi-agent
 observations, actions, lifecycle results, deterministic seeding, and validated experiment
-configuration. Concrete environment dynamics and reward behavior remain Stage 3 work.
+configuration. Stage 3 implements the first-order kinematic environment, structured observations,
+decomposed rewards, independent metrics, scripted controller, and episode runner. Rigid-body
+simulation and reinforcement learning remain future work.
