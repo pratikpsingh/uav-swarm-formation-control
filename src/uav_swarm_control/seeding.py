@@ -12,6 +12,7 @@ class RandomStream(IntEnum):
     INITIAL_STATE = 1
     ACTION_SAMPLING = 2
     POLICY = 3
+    EVALUATION = 4
 
 
 def validate_seed(value: object) -> int:

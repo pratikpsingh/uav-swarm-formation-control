@@ -27,5 +27,7 @@ The first schema contains:
 - the scripted proportional-controller gain.
 
 See [experiment/triangle_kinematic.yaml](experiment/triangle_kinematic.yaml) for a complete example.
-A composition framework will be considered only when Stage 4 introduces repeated algorithm
-settings. Local machine overrides should use the suffix .local.yaml, which Git ignores.
+The [PPO reference experiment](experiment/ppo_continuous_bandit.yaml) adds validated rollout,
+optimization, network, device, and evaluation settings. A composition framework will be considered
+only after repeated configurations create demonstrated duplication. Local machine overrides should
+use the suffix .local.yaml, which Git ignores.

@@ -5,11 +5,23 @@ import logging
 from collections.abc import Sequence
 from pathlib import Path
 
-from uav_swarm_control.configuration import ConfigurationError, load_experiment_config
+from uav_swarm_control.algorithms.ppo import (
+    evaluate_continuous_bandit,
+    load_policy_checkpoint,
+    save_policy_checkpoint,
+    train_ppo,
+)
+from uav_swarm_control.configuration import (
+    ConfigurationError,
+    load_experiment_config,
+    load_ppo_experiment_config,
+)
 from uav_swarm_control.controllers.proportional import ProportionalPositionController
+from uav_swarm_control.environments.continuous_bandit import ContinuousTargetBandit
 from uav_swarm_control.environments.kinematic import KinematicSwarmEnvironment
 from uav_swarm_control.evaluation.rollout import run_episode
 from uav_swarm_control.logging import LogLevel, configure_logging
+from uav_swarm_control.seeding import RandomStream, derive_seed
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +49,28 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="path to a validated experiment YAML file",
     )
+    train = commands.add_parser(
+        "train-ppo",
+        help="train PPO on the continuous reference task",
+    )
+    train.add_argument(
+        "--config",
+        type=Path,
+        required=True,
+        help="path to a validated PPO experiment YAML file",
+    )
+    train.add_argument(
+        "--checkpoint",
+        type=Path,
+        default=Path("artifacts/checkpoints/ppo_continuous_bandit.pt"),
+        help="output checkpoint path (default: %(default)s)",
+    )
+    evaluate = commands.add_parser(
+        "evaluate-ppo",
+        help="evaluate a saved PPO policy on the reference task",
+    )
+    evaluate.add_argument("--config", type=Path, required=True)
+    evaluate.add_argument("--checkpoint", type=Path, required=True)
     return parser
 
 
@@ -71,4 +105,58 @@ def main(argv: Sequence[str] | None = None) -> None:
             result.final_metrics["position_rmse_m"],
         )
         return
-    LOGGER.info("Kinematic control loop is ready; no reinforcement-learning algorithm exists yet.")
+    if args.command == "train-ppo":
+        try:
+            config = load_ppo_experiment_config(args.config)
+            result = train_ppo(
+                ContinuousTargetBandit(config.task),
+                config.algorithm,
+                seed=config.seed,
+            )
+            evaluation = evaluate_continuous_bandit(
+                result.model,
+                config.task,
+                seed=derive_seed(config.seed, RandomStream.EVALUATION),
+                device=result.device,
+            )
+            checkpoint_path = save_policy_checkpoint(
+                args.checkpoint,
+                result.model,
+                metadata={
+                    "experiment": config.name,
+                    "seed": config.seed,
+                    "environment_steps": result.environment_steps,
+                },
+            )
+        except (ConfigurationError, OSError, RuntimeError, ValueError) as error:
+            parser.error(str(error))
+        LOGGER.info(
+            "PPO training complete: steps=%d action_mse=%.6f success_rate=%.3f checkpoint=%s",
+            result.environment_steps,
+            evaluation.action_mse,
+            evaluation.success_rate,
+            checkpoint_path,
+        )
+        return
+    if args.command == "evaluate-ppo":
+        try:
+            config = load_ppo_experiment_config(args.config)
+            model, metadata = load_policy_checkpoint(args.checkpoint, device="cpu")
+            evaluation = evaluate_continuous_bandit(
+                model,
+                config.task,
+                seed=derive_seed(config.seed, RandomStream.EVALUATION),
+            )
+        except (ConfigurationError, OSError, RuntimeError, ValueError) as error:
+            parser.error(str(error))
+        LOGGER.info(
+            "PPO evaluation complete: episodes=%d mean_reward=%.6f action_mse=%.6f "
+            "success_rate=%.3f checkpoint_steps=%s",
+            evaluation.episodes,
+            evaluation.mean_reward,
+            evaluation.action_mse,
+            evaluation.success_rate,
+            metadata.get("environment_steps", "unknown"),
+        )
+        return
+    LOGGER.info("Kinematic control loop is ready; single-agent PPO foundation is also ready.")

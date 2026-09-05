@@ -7,12 +7,14 @@ multi-agent reinforcement-learning methods.
 
 The project is being built in small, reviewable stages. The current package provides validated
 formation geometry, multi-agent contracts, strict experiment configuration, a deterministic 3D
-point-mass environment, decomposed rewards and metrics, and a proportional-controller baseline. It
-does not yet contain a reinforcement-learning algorithm or rigid-body simulator.
+point-mass environment, decomposed rewards and metrics, a proportional-controller baseline, and a
+tested single-agent PPO foundation. It does not yet contain MAPPO or a rigid-body simulator.
 
 See [the formation geometry contract](docs/formations.md) and
 [the multi-agent contract](docs/multi-agent-contracts.md) for the foundational APIs. The
 [kinematic environment](docs/kinematic-environment.md) describes the first complete control loop.
+The [PPO foundation](docs/ppo.md) explains the learning algorithm and its deliberately simple
+reference task.
 
 ## Requirements
 
@@ -36,6 +38,21 @@ Run the deterministic scripted baseline:
 ```bash
 uv run uav-swarm-control --log-level INFO run-scripted \
   --config configs/experiment/triangle_kinematic.yaml
+```
+
+Train the single-agent PPO reference policy (the checkpoint is written to ignored artifacts):
+
+```bash
+uv run uav-swarm-control train-ppo \
+  --config configs/experiment/ppo_continuous_bandit.yaml
+```
+
+Evaluate that checkpoint:
+
+```bash
+uv run uav-swarm-control evaluate-ppo \
+  --config configs/experiment/ppo_continuous_bandit.yaml \
+  --checkpoint artifacts/checkpoints/ppo_continuous_bandit.pt
 ```
 
 Run all local quality checks:
