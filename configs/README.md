@@ -25,6 +25,7 @@ The first schema contains:
 - initial-state sampling, success, and collision rules;
 - explicit reward-component weights;
 - the scripted proportional-controller gain.
+- for physics runs, the drone model, physics mode, physics/control rates, GUI, and recording flags.
 
 See [experiment/triangle_kinematic.yaml](experiment/triangle_kinematic.yaml) for a complete example.
 The [PPO reference experiment](experiment/ppo_continuous_bandit.yaml) adds validated rollout,
@@ -33,3 +34,8 @@ optimization, network, device, and evaluation settings. The
 the kinematic task, parallel-environment count, and centralized-critic widths. A composition
 framework will be considered only after repeated configurations create demonstrated duplication.
 Local machine overrides should use the suffix .local.yaml, which Git ignores.
+
+The PyBullet smoke gates are [one-drone hover](experiment/pybullet_hover.yaml) and
+[three-drone formation](experiment/pybullet_triangle.yaml). Their environment timestep must equal
+the reciprocal of the controller frequency, while the physics frequency must be an integer multiple
+of that rate.

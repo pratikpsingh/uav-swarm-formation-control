@@ -1,7 +1,5 @@
 """Deterministic first-order 3D point-mass swarm environment."""
 
-import math
-
 import numpy as np
 
 from uav_swarm_control.agents import AgentId, sequential_agent_ids
@@ -18,7 +16,12 @@ from uav_swarm_control.formations import (
     transform,
 )
 from uav_swarm_control.formations._typing import FloatArray
-from uav_swarm_control.observations import CentralizedState, LocalObservations
+from uav_swarm_control.observations import (
+    CentralizedState,
+    LocalObservations,
+    build_centralized_state,
+    build_local_observations,
+)
 from uav_swarm_control.rewards.components import compute_reward
 from uav_swarm_control.seeding import RandomStream, make_rng
 
@@ -169,48 +172,15 @@ class KinematicSwarmEnvironment:
 
     def _local_observations(self) -> LocalObservations:
         positions, velocities, _ = self._state()
-        relative_targets = self._targets - positions
-        ego = np.concatenate((relative_targets, velocities), axis=1).astype(np.float32)
-
-        num_agents = len(self._agent_ids)
-        max_neighbors = self._config.observation.max_neighbors
-        neighbors = np.zeros((num_agents, max_neighbors, 6), dtype=np.float32)
-        mask = np.zeros((num_agents, max_neighbors), dtype=np.bool_)
-        radius = self._config.observation.neighbor_radius_m
-
-        for agent_index in range(num_agents):
-            relative_positions = positions - positions[agent_index]
-            distances = np.array(
-                [
-                    math.sqrt(sum(float(component) ** 2 for component in relative_position))
-                    for relative_position in relative_positions
-                ],
-                dtype=np.float64,
-            )
-            candidates = [
-                other_index
-                for other_index in range(num_agents)
-                if other_index != agent_index
-                and (radius is None or distances[other_index] <= radius)
-            ]
-            candidates.sort(
-                key=lambda index: (
-                    round(float(distances[index]), 12),
-                    self._agent_ids[index].value,
-                )
-            )
-            for slot, neighbor_index in enumerate(candidates[:max_neighbors]):
-                neighbors[agent_index, slot, :3] = relative_positions[neighbor_index]
-                neighbors[agent_index, slot, 3:] = (
-                    velocities[neighbor_index] - velocities[agent_index]
-                )
-                mask[agent_index, slot] = True
-
-        return LocalObservations(self._agent_ids, ego, neighbors, mask)
+        return build_local_observations(
+            self._agent_ids,
+            positions,
+            velocities,
+            self._targets,
+            max_neighbors=self._config.observation.max_neighbors,
+            neighbor_radius_m=self._config.observation.neighbor_radius_m,
+        )
 
     def _centralized_state(self) -> CentralizedState:
         positions, velocities, _ = self._state()
-        values = np.concatenate(
-            (positions.reshape(-1), velocities.reshape(-1), self._targets.reshape(-1))
-        ).astype(np.float32)
-        return CentralizedState(values)
+        return build_centralized_state(positions, velocities, self._targets)

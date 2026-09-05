@@ -29,6 +29,15 @@ from uav_swarm_control.configuration.ppo import (
     ppo_config_from_mapping,
     ppo_experiment_config_from_mapping,
 )
+from uav_swarm_control.configuration.pybullet import (
+    PyBulletDroneModel,
+    PyBulletExperimentConfig,
+    PyBulletPhysics,
+    PyBulletSimulatorConfig,
+    load_pybullet_experiment_config,
+    pybullet_experiment_config_from_mapping,
+    pybullet_experiment_config_to_dict,
+)
 
 __all__ = [
     "ConfigurationError",
@@ -43,13 +52,20 @@ __all__ = [
     "PPOConfig",
     "PPOExperimentConfig",
     "ProportionalControllerConfig",
+    "PyBulletDroneModel",
+    "PyBulletExperimentConfig",
+    "PyBulletPhysics",
+    "PyBulletSimulatorConfig",
     "RewardConfig",
     "experiment_config_from_mapping",
     "experiment_config_to_dict",
     "load_experiment_config",
     "load_mappo_experiment_config",
     "load_ppo_experiment_config",
+    "load_pybullet_experiment_config",
     "mappo_experiment_config_from_mapping",
     "ppo_config_from_mapping",
     "ppo_experiment_config_from_mapping",
+    "pybullet_experiment_config_from_mapping",
+    "pybullet_experiment_config_to_dict",
 ]

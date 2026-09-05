@@ -45,5 +45,6 @@ observations, actions, lifecycle results, deterministic seeding, and validated e
 configuration. Stage 3 implements the first-order kinematic environment, structured observations,
 decomposed rewards, independent metrics, scripted controller, and episode runner. Stage 4 validates
 the project-owned PPO implementation on a known single-agent task. Stage 5 applies that foundation
-to parameter-shared MAPPO with a local actor and centralized critic. Rigid-body simulation remains
-future work.
+to parameter-shared MAPPO with a local actor and centralized critic. Stage 6 adds a typed rigid-body
+backend, a pinned gym-pybullet-drones bridge, and a PyBullet environment that reuses the same
+observation, reward, termination, and metric builders as the kinematic environment.

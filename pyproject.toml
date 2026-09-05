@@ -10,6 +10,9 @@ dependencies = [
     "torch>=2.7,<3",
 ]
 
+[project.optional-dependencies]
+simulation = ["gym-pybullet-drones"]
+
 [project.scripts]
 uav-swarm-control = "uav_swarm_control.cli:main"
 
@@ -19,6 +22,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "gym-pybullet-drones",
     "pre-commit>=4.2",
     "pyright>=1.1.400",
     "pytest>=8.4",
@@ -51,3 +55,6 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["B", "E", "F", "I", "RUF", "SIM", "UP"]
+
+[tool.uv.sources]
+gym-pybullet-drones = { git = "https://github.com/utiasDSL/gym-pybullet-drones.git", rev = "24fccff4da746badb6eaa9f5055cd5d9b6613160" }

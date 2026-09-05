@@ -8,15 +8,17 @@ multi-agent reinforcement-learning methods.
 The project is being built in small, reviewable stages. The current package provides validated
 formation geometry, multi-agent contracts, strict experiment configuration, a deterministic 3D
 point-mass environment, decomposed rewards and metrics, a proportional-controller baseline, and a
-tested single-agent PPO foundation. It now also provides parameter-shared MAPPO with centralized
-training and decentralized execution. It does not yet contain a rigid-body simulator.
+tested single-agent PPO foundation. It also provides parameter-shared MAPPO with centralized
+training and decentralized execution. A pinned `gym-pybullet-drones` adapter now executes the same
+formation task with Crazyflie rigid-body physics and an explicit velocity-to-PID action path.
 
 See [the formation geometry contract](docs/formations.md) and
 [the multi-agent contract](docs/multi-agent-contracts.md) for the foundational APIs. The
 [kinematic environment](docs/kinematic-environment.md) describes the first complete control loop.
 The [PPO foundation](docs/ppo.md) explains the learning algorithm and its deliberately simple
 reference task. The [MAPPO foundation](docs/mappo.md) explains parameter sharing, centralized
-training, and the explicit time/environment/agent batch axes.
+training, and the explicit time/environment/agent batch axes. The
+[PyBullet adapter](docs/pybullet.md) documents simulator timing, reset behavior, and provenance.
 
 ## Requirements
 
@@ -27,6 +29,13 @@ training, and the explicit time/environment/agent batch axes.
 
 ```bash
 uv sync
+```
+
+PyBullet is a research-only optional dependency. A normal development sync includes it because the
+development test group exercises the adapter. A runtime-only simulator installation uses:
+
+```bash
+uv sync --no-dev --extra simulation
 ```
 
 Run the project smoke-test command:
@@ -40,6 +49,14 @@ Run the deterministic scripted baseline:
 ```bash
 uv run uav-swarm-control --log-level INFO run-scripted \
   --config configs/experiment/triangle_kinematic.yaml
+```
+
+Run the scripted controller against pinned Crazyflie physics and save a complete JSON record:
+
+```bash
+uv run uav-swarm-control run-pybullet \
+  --config configs/experiment/pybullet_triangle.yaml \
+  --output artifacts/runs/pybullet-triangle.json
 ```
 
 Train the single-agent PPO reference policy (the checkpoint is written to ignored artifacts):

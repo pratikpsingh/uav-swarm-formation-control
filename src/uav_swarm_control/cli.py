@@ -22,10 +22,13 @@ from uav_swarm_control.configuration import (
     load_experiment_config,
     load_mappo_experiment_config,
     load_ppo_experiment_config,
+    load_pybullet_experiment_config,
 )
 from uav_swarm_control.controllers.proportional import ProportionalPositionController
 from uav_swarm_control.environments.continuous_bandit import ContinuousTargetBandit
 from uav_swarm_control.environments.kinematic import KinematicSwarmEnvironment
+from uav_swarm_control.environments.pybullet import PyBulletSwarmEnvironment
+from uav_swarm_control.evaluation.artifacts import pybullet_episode_record, save_json_artifact
 from uav_swarm_control.evaluation.rollout import run_episode
 from uav_swarm_control.logging import LogLevel, configure_logging
 from uav_swarm_control.seeding import RandomStream, derive_seed
@@ -55,6 +58,17 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         required=True,
         help="path to a validated experiment YAML file",
+    )
+    run_pybullet = commands.add_parser(
+        "run-pybullet",
+        help="run the scripted baseline in pinned Crazyflie rigid-body simulation",
+    )
+    run_pybullet.add_argument("--config", type=Path, required=True)
+    run_pybullet.add_argument(
+        "--output",
+        type=Path,
+        default=Path("artifacts/runs/pybullet-scripted.json"),
+        help="JSON result path (default: %(default)s)",
     )
     train = commands.add_parser(
         "train-ppo",
@@ -127,6 +141,41 @@ def main(argv: Sequence[str] | None = None) -> None:
             result.success,
             result.steps,
             result.final_metrics["position_rmse_m"],
+        )
+        return
+    if args.command == "run-pybullet":
+        try:
+            config = load_pybullet_experiment_config(args.config)
+            environment = PyBulletSwarmEnvironment(config)
+            controller = ProportionalPositionController(
+                gain_per_second=config.experiment.controller.gain_per_second,
+                max_velocity_component_mps=(
+                    config.experiment.environment.max_velocity_component_mps
+                ),
+            )
+            try:
+                result = run_episode(
+                    environment,
+                    controller,
+                    seed=config.experiment.seed,
+                    safety_step_limit=config.experiment.environment.max_episode_steps,
+                )
+                record = pybullet_episode_record(
+                    config,
+                    environment.simulator_metadata,
+                    result,
+                )
+                output_path = save_json_artifact(args.output, record)
+            finally:
+                environment.close()
+        except (ConfigurationError, OSError, RuntimeError, ValueError) as error:
+            parser.error(str(error))
+        LOGGER.info(
+            "PyBullet episode complete: success=%s steps=%d position_rmse_m=%.6f result=%s",
+            result.success,
+            result.steps,
+            result.final_metrics["position_rmse_m"],
+            output_path,
         )
         return
     if args.command == "train-ppo":
