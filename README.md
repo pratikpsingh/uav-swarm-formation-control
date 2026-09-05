@@ -8,13 +8,15 @@ multi-agent reinforcement-learning methods.
 The project is being built in small, reviewable stages. The current package provides validated
 formation geometry, multi-agent contracts, strict experiment configuration, a deterministic 3D
 point-mass environment, decomposed rewards and metrics, a proportional-controller baseline, and a
-tested single-agent PPO foundation. It does not yet contain MAPPO or a rigid-body simulator.
+tested single-agent PPO foundation. It now also provides parameter-shared MAPPO with centralized
+training and decentralized execution. It does not yet contain a rigid-body simulator.
 
 See [the formation geometry contract](docs/formations.md) and
 [the multi-agent contract](docs/multi-agent-contracts.md) for the foundational APIs. The
 [kinematic environment](docs/kinematic-environment.md) describes the first complete control loop.
 The [PPO foundation](docs/ppo.md) explains the learning algorithm and its deliberately simple
-reference task.
+reference task. The [MAPPO foundation](docs/mappo.md) explains parameter sharing, centralized
+training, and the explicit time/environment/agent batch axes.
 
 ## Requirements
 
@@ -53,6 +55,17 @@ Evaluate that checkpoint:
 uv run uav-swarm-control evaluate-ppo \
   --config configs/experiment/ppo_continuous_bandit.yaml \
   --checkpoint artifacts/checkpoints/ppo_continuous_bandit.pt
+```
+
+Train and evaluate the three-agent MAPPO reference policy:
+
+```bash
+uv run uav-swarm-control train-mappo \
+  --config configs/experiment/mappo_triangle_kinematic.yaml
+
+uv run uav-swarm-control evaluate-mappo \
+  --config configs/experiment/mappo_triangle_kinematic.yaml \
+  --checkpoint artifacts/checkpoints/mappo_triangle_kinematic.pt
 ```
 
 Run all local quality checks:

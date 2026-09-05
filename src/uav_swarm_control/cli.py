@@ -5,6 +5,12 @@ import logging
 from collections.abc import Sequence
 from pathlib import Path
 
+from uav_swarm_control.algorithms.mappo import (
+    evaluate_mappo,
+    load_mappo_checkpoint,
+    save_mappo_checkpoint,
+    train_mappo,
+)
 from uav_swarm_control.algorithms.ppo import (
     evaluate_continuous_bandit,
     load_policy_checkpoint,
@@ -14,6 +20,7 @@ from uav_swarm_control.algorithms.ppo import (
 from uav_swarm_control.configuration import (
     ConfigurationError,
     load_experiment_config,
+    load_mappo_experiment_config,
     load_ppo_experiment_config,
 )
 from uav_swarm_control.controllers.proportional import ProportionalPositionController
@@ -71,6 +78,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     evaluate.add_argument("--config", type=Path, required=True)
     evaluate.add_argument("--checkpoint", type=Path, required=True)
+    train_multi_agent = commands.add_parser(
+        "train-mappo",
+        help="train parameter-shared MAPPO on the kinematic swarm task",
+    )
+    train_multi_agent.add_argument("--config", type=Path, required=True)
+    train_multi_agent.add_argument(
+        "--checkpoint",
+        type=Path,
+        default=Path("artifacts/checkpoints/mappo_triangle_kinematic.pt"),
+        help="output checkpoint path (default: %(default)s)",
+    )
+    evaluate_multi_agent = commands.add_parser(
+        "evaluate-mappo",
+        help="evaluate a saved MAPPO actor without its centralized critic",
+    )
+    evaluate_multi_agent.add_argument("--config", type=Path, required=True)
+    evaluate_multi_agent.add_argument("--checkpoint", type=Path, required=True)
     return parser
 
 
@@ -159,4 +183,64 @@ def main(argv: Sequence[str] | None = None) -> None:
             metadata.get("environment_steps", "unknown"),
         )
         return
-    LOGGER.info("Kinematic control loop is ready; single-agent PPO foundation is also ready.")
+    if args.command == "train-mappo":
+        try:
+            config = load_mappo_experiment_config(args.config)
+
+            def environment_factory() -> KinematicSwarmEnvironment:
+                return KinematicSwarmEnvironment(config.experiment)
+
+            result = train_mappo(environment_factory, config.algorithm, seed=config.experiment.seed)
+            evaluation = evaluate_mappo(
+                result.model,
+                environment_factory,
+                episodes=config.evaluation_episodes,
+                seed=config.experiment.seed,
+                device=result.device,
+            )
+            checkpoint_path = save_mappo_checkpoint(
+                args.checkpoint,
+                result.model,
+                metadata={
+                    "experiment": config.experiment.name,
+                    "seed": config.experiment.seed,
+                    "environment_steps": result.environment_steps,
+                    "agent_samples": result.agent_samples,
+                },
+            )
+        except (ConfigurationError, OSError, RuntimeError, ValueError) as error:
+            parser.error(str(error))
+        LOGGER.info(
+            "MAPPO training complete: environment_steps=%d agent_samples=%d success_rate=%.3f "
+            "position_rmse_m=%.6f checkpoint=%s",
+            result.environment_steps,
+            result.agent_samples,
+            evaluation.success_rate,
+            evaluation.mean_final_position_rmse_m,
+            checkpoint_path,
+        )
+        return
+    if args.command == "evaluate-mappo":
+        try:
+            config = load_mappo_experiment_config(args.config)
+            model, metadata = load_mappo_checkpoint(args.checkpoint, device="cpu")
+            evaluation = evaluate_mappo(
+                model,
+                lambda: KinematicSwarmEnvironment(config.experiment),
+                episodes=config.evaluation_episodes,
+                seed=config.experiment.seed,
+            )
+        except (ConfigurationError, OSError, RuntimeError, ValueError) as error:
+            parser.error(str(error))
+        LOGGER.info(
+            "MAPPO evaluation complete: episodes=%d success_rate=%.3f collision_rate=%.3f "
+            "position_rmse_m=%.6f shape_rmse_m=%.6f checkpoint_steps=%s",
+            evaluation.episodes,
+            evaluation.success_rate,
+            evaluation.collision_episode_rate,
+            evaluation.mean_final_position_rmse_m,
+            evaluation.mean_final_shape_rmse_m,
+            metadata.get("environment_steps", "unknown"),
+        )
+        return
+    LOGGER.info("Kinematic control loop is ready; PPO and MAPPO foundations are also ready.")

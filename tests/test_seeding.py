@@ -3,7 +3,13 @@
 import numpy as np
 import pytest
 
-from uav_swarm_control.seeding import RandomStream, derive_seed, make_rng, validate_seed
+from uav_swarm_control.seeding import (
+    RandomStream,
+    derive_indexed_seed,
+    derive_seed,
+    make_rng,
+    validate_seed,
+)
 
 
 def test_same_root_and_stream_reproduce_identical_sequences() -> None:
@@ -19,6 +25,19 @@ def test_named_streams_are_deterministic_and_distinct() -> None:
 
     assert environment_seed == derive_seed(42, RandomStream.ENVIRONMENT)
     assert environment_seed != policy_seed
+
+
+def test_indexed_seeds_are_reproducible_and_distinguish_parallel_episodes() -> None:
+    first = derive_indexed_seed(42, RandomStream.INITIAL_STATE, 2, 7)
+
+    assert first == derive_indexed_seed(42, RandomStream.INITIAL_STATE, 2, 7)
+    assert first != derive_indexed_seed(42, RandomStream.INITIAL_STATE, 2, 8)
+    assert first != derive_indexed_seed(42, RandomStream.INITIAL_STATE, 3, 7)
+
+
+def test_indexed_seed_rejects_invalid_indices() -> None:
+    with pytest.raises(ValueError, match="non-negative integers"):
+        derive_indexed_seed(42, RandomStream.INITIAL_STATE, -1)
 
 
 @pytest.mark.parametrize("value", [-1, 2**64, True])

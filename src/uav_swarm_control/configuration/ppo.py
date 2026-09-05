@@ -15,6 +15,24 @@ from uav_swarm_control.seeding import validate_seed
 type DeviceName = Literal["auto", "cpu", "cuda"]
 
 _EXPERIMENT_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+PPO_ALGORITHM_KEYS = frozenset(
+    {
+        "total_steps",
+        "rollout_steps",
+        "update_epochs",
+        "minibatch_size",
+        "learning_rate",
+        "gamma",
+        "gae_lambda",
+        "clip_coefficient",
+        "value_coefficient",
+        "entropy_coefficient",
+        "max_gradient_norm",
+        "hidden_sizes",
+        "initial_log_standard_deviation",
+        "device",
+    }
+)
 
 
 def _integer(value: object, *, path: str, minimum: int = 1) -> int:
@@ -253,33 +271,11 @@ class PPOExperimentConfig:
         object.__setattr__(self, "seed", seed)
 
 
-def ppo_experiment_config_from_mapping(value: object) -> PPOExperimentConfig:
-    """Build a validated PPO experiment from an untrusted mapping."""
-    root = _mapping(value, path="configuration")
-    _validate_keys(
-        root,
-        path="configuration",
-        required={"schema_version", "name", "seed", "algorithm", "task"},
-    )
-    algorithm = _mapping(root["algorithm"], path="algorithm")
-    algorithm_keys = {
-        "total_steps",
-        "rollout_steps",
-        "update_epochs",
-        "minibatch_size",
-        "learning_rate",
-        "gamma",
-        "gae_lambda",
-        "clip_coefficient",
-        "value_coefficient",
-        "entropy_coefficient",
-        "max_gradient_norm",
-        "hidden_sizes",
-        "initial_log_standard_deviation",
-        "device",
-    }
-    _validate_keys(algorithm, path="algorithm", required=algorithm_keys)
-    algorithm_config = PPOConfig(
+def ppo_config_from_mapping(value: object) -> PPOConfig:
+    """Build validated PPO hyperparameters from an untrusted algorithm mapping."""
+    algorithm = _mapping(value, path="algorithm")
+    _validate_keys(algorithm, path="algorithm", required=set(PPO_ALGORITHM_KEYS))
+    return PPOConfig(
         total_steps=_integer(algorithm["total_steps"], path="algorithm.total_steps"),
         rollout_steps=_integer(algorithm["rollout_steps"], path="algorithm.rollout_steps"),
         update_epochs=_integer(algorithm["update_epochs"], path="algorithm.update_epochs"),
@@ -310,6 +306,17 @@ def ppo_experiment_config_from_mapping(value: object) -> PPOExperimentConfig:
         ),
         device=_device_name(algorithm["device"]),
     )
+
+
+def ppo_experiment_config_from_mapping(value: object) -> PPOExperimentConfig:
+    """Build a validated PPO experiment from an untrusted mapping."""
+    root = _mapping(value, path="configuration")
+    _validate_keys(
+        root,
+        path="configuration",
+        required={"schema_version", "name", "seed", "algorithm", "task"},
+    )
+    algorithm_config = ppo_config_from_mapping(root["algorithm"])
 
     task = _mapping(root["task"], path="task")
     _validate_keys(

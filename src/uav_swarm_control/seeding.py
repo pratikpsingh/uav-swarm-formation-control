@@ -31,6 +31,22 @@ def derive_seed(root_seed: int, stream: RandomStream) -> int:
     return int(sequence.generate_state(1, dtype=np.uint64)[0])
 
 
+def derive_indexed_seed(
+    root_seed: int,
+    stream: RandomStream,
+    *indices: object,
+) -> int:
+    """Derive a stable seed for a named stream and non-negative logical indices."""
+    root = validate_seed(root_seed)
+    validated: list[int] = []
+    for index in indices:
+        if isinstance(index, bool) or not isinstance(index, int) or index < 0:
+            raise ValueError("seed indices must be non-negative integers.")
+        validated.append(index)
+    sequence = np.random.SeedSequence([root, int(stream), *validated])
+    return int(sequence.generate_state(1, dtype=np.uint64)[0])
+
+
 def make_rng(root_seed: int, stream: RandomStream) -> np.random.Generator:
     """Create an isolated NumPy generator for one named stream."""
     return np.random.default_rng(derive_seed(root_seed, stream))

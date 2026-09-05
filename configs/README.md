@@ -28,6 +28,8 @@ The first schema contains:
 
 See [experiment/triangle_kinematic.yaml](experiment/triangle_kinematic.yaml) for a complete example.
 The [PPO reference experiment](experiment/ppo_continuous_bandit.yaml) adds validated rollout,
-optimization, network, device, and evaluation settings. A composition framework will be considered
-only after repeated configurations create demonstrated duplication. Local machine overrides should
-use the suffix .local.yaml, which Git ignores.
+optimization, network, device, and evaluation settings. The
+[MAPPO reference experiment](experiment/mappo_triangle_kinematic.yaml) combines those settings with
+the kinematic task, parallel-environment count, and centralized-critic widths. A composition
+framework will be considered only after repeated configurations create demonstrated duplication.
+Local machine overrides should use the suffix .local.yaml, which Git ignores.

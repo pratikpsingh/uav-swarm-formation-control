@@ -62,8 +62,8 @@ def test_gae_bootstraps_at_truncation_but_does_not_cross_it() -> None:
     assert returns.item() == pytest.approx(2.8)
 
 
-def test_return_estimators_reject_mismatched_vectors() -> None:
-    with pytest.raises(ValueError, match="equal length"):
+def test_return_estimators_reject_mismatched_shapes() -> None:
+    with pytest.raises(ValueError, match="equal shape"):
         generalized_advantage_estimate(
             torch.tensor([1.0]),
             torch.tensor([0.0, 0.0]),

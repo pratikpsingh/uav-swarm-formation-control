@@ -4,6 +4,12 @@ from uav_swarm_control.configuration.loading import (
     experiment_config_from_mapping,
     load_experiment_config,
 )
+from uav_swarm_control.configuration.mappo import (
+    MAPPOConfig,
+    MAPPOExperimentConfig,
+    load_mappo_experiment_config,
+    mappo_experiment_config_from_mapping,
+)
 from uav_swarm_control.configuration.models import (
     ConfigurationError,
     EnvironmentConfig,
@@ -20,6 +26,7 @@ from uav_swarm_control.configuration.ppo import (
     PPOConfig,
     PPOExperimentConfig,
     load_ppo_experiment_config,
+    ppo_config_from_mapping,
     ppo_experiment_config_from_mapping,
 )
 
@@ -30,6 +37,8 @@ __all__ = [
     "ExperimentConfig",
     "FormationConfig",
     "KinematicTaskConfig",
+    "MAPPOConfig",
+    "MAPPOExperimentConfig",
     "ObservationConfig",
     "PPOConfig",
     "PPOExperimentConfig",
@@ -38,6 +47,9 @@ __all__ = [
     "experiment_config_from_mapping",
     "experiment_config_to_dict",
     "load_experiment_config",
+    "load_mappo_experiment_config",
     "load_ppo_experiment_config",
+    "mappo_experiment_config_from_mapping",
+    "ppo_config_from_mapping",
     "ppo_experiment_config_from_mapping",
 ]

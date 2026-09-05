@@ -39,6 +39,64 @@ algorithm:
     )
 
 
+def _write_small_mappo_config(path: Path) -> None:
+    path.write_text(
+        """\
+schema_version: 1
+name: mappo-cli-test
+seed: 42
+formation:
+  kind: triangle
+  num_agents: 3
+  spacing_m: 1.0
+  center_m: [0.0, 0.0, 1.0]
+  euler_radians: [0.0, 0.0, 0.0]
+environment:
+  time_step_seconds: 0.1
+  max_episode_steps: 8
+  max_velocity_component_mps: 1.0
+observation:
+  max_neighbors: 2
+  neighbor_radius_m: null
+task:
+  initial_center_m: [-1.0, 0.0, 1.0]
+  initial_position_noise_m: 0.0
+  success_tolerance_m: 0.1
+  success_hold_steps: 2
+  collision_distance_m: 0.2
+  terminate_on_collision: false
+reward:
+  navigation_weight: 1.0
+  formation_weight: 0.25
+  collision_penalty: 2.0
+  smoothness_weight: 0.01
+  success_bonus: 5.0
+controller:
+  gain_per_second: 1.5
+algorithm:
+  total_steps: 128
+  rollout_steps: 64
+  num_environments: 1
+  update_epochs: 1
+  minibatch_size: 64
+  learning_rate: 0.0003
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_coefficient: 0.2
+  value_coefficient: 0.5
+  entropy_coefficient: 0.001
+  max_gradient_norm: 0.5
+  hidden_sizes: [8, 8]
+  critic_hidden_sizes: [16, 16]
+  initial_log_standard_deviation: -0.5
+  device: cpu
+evaluation:
+  episodes: 1
+""",
+        encoding="utf-8",
+    )
+
+
 def test_cli_reports_current_project_status(capsys: CaptureFixture[str]) -> None:
     """The CLI should prove that packaging and logging are connected."""
     main(["--log-level", "INFO"])
@@ -109,3 +167,42 @@ def test_cli_reports_invalid_ppo_configuration(
         main(["train-ppo", "--config", str(config_path)])
 
     assert "must use a .yaml or .yml extension" in capsys.readouterr().err
+
+
+def test_cli_trains_saves_and_evaluates_mappo(
+    tmp_path: Path,
+    capsys: CaptureFixture[str],
+) -> None:
+    config_path = tmp_path / "mappo.yaml"
+    checkpoint_path = tmp_path / "mappo.pt"
+    _write_small_mappo_config(config_path)
+
+    main(
+        [
+            "train-mappo",
+            "--config",
+            str(config_path),
+            "--checkpoint",
+            str(checkpoint_path),
+        ]
+    )
+    training_output = capsys.readouterr()
+
+    assert checkpoint_path.is_file()
+    assert "MAPPO training complete" in training_output.err
+    assert "environment_steps=128" in training_output.err
+    assert "agent_samples=384" in training_output.err
+
+    main(
+        [
+            "evaluate-mappo",
+            "--config",
+            str(config_path),
+            "--checkpoint",
+            str(checkpoint_path),
+        ]
+    )
+    evaluation_output = capsys.readouterr()
+
+    assert "MAPPO evaluation complete" in evaluation_output.err
+    assert "checkpoint_steps=128" in evaluation_output.err

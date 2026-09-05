@@ -43,5 +43,7 @@ observations.
 Stage 1 implements simulator-independent formation geometry. Stage 2 implements typed multi-agent
 observations, actions, lifecycle results, deterministic seeding, and validated experiment
 configuration. Stage 3 implements the first-order kinematic environment, structured observations,
-decomposed rewards, independent metrics, scripted controller, and episode runner. Rigid-body
-simulation and reinforcement learning remain future work.
+decomposed rewards, independent metrics, scripted controller, and episode runner. Stage 4 validates
+the project-owned PPO implementation on a known single-agent task. Stage 5 applies that foundation
+to parameter-shared MAPPO with a local actor and centralized critic. Rigid-body simulation remains
+future work.
