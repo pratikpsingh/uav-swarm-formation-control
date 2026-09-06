@@ -1,0 +1,62 @@
+# Corrected feed-forward MA-PPO baseline; see docs/paper04-baseline.md for deviations.
+schema_version: 1
+name: paper04-3uav
+seed: 11
+formation:
+  kind: polygon
+  num_agents: 3
+  spacing_m: 1.0
+  center_m: [0.0, 0.0, 1.0]
+  euler_radians: [0.0, 0.0, 0.0]
+environment:
+  time_step_seconds: 0.03333333333333333
+  max_episode_steps: 242
+  max_velocity_component_mps: 0.5
+observation:
+  max_neighbors: 2
+  neighbor_radius_m: null
+task:
+  initial_center_m: [-1.0, 0.0, 1.0]
+  initial_position_noise_m: 0.1
+  success_tolerance_m: 0.08
+  success_hold_steps: 15
+  collision_distance_m: 0.2
+  terminate_on_collision: true
+reward:
+  navigation_weight: 10.0
+  formation_weight: 1.0
+  collision_penalty: 2.0
+  smoothness_weight: 0.0
+  success_bonus: 0.0
+controller:
+  gain_per_second: 1.5
+simulator:
+  drone_model: cf2x
+  physics: pyb_gnd_drag_dw
+  physics_frequency_hz: 240
+  control_frequency_hz: 30
+  gui: false
+  record_video: false
+algorithm:
+  total_steps: 10000000
+  rollout_steps: 1000
+  num_environments: 20
+  update_epochs: 4
+  minibatch_size: 250
+  learning_rate: 0.0005
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_coefficient: 0.2
+  value_coefficient: 0.5
+  entropy_coefficient: 0.001
+  max_gradient_norm: 0.5
+  hidden_sizes: [256, 256]
+  critic_hidden_sizes: [256, 256]
+  initial_log_standard_deviation: -0.5
+  device: auto
+evaluation:
+  episodes: 20
+protocol:
+  training_seeds: [11, 22, 33, 44, 55]
+  evaluation_seed: 20260907
+  profile: research

@@ -11,6 +11,9 @@ point-mass environment, decomposed rewards and metrics, a proportional-controlle
 tested single-agent PPO foundation. It also provides parameter-shared MAPPO with centralized
 training and decentralized execution. A pinned `gym-pybullet-drones` adapter now executes the same
 formation task with Crazyflie rigid-body physics and an explicit velocity-to-PID action path.
+The corrected Paper 04 baseline now provides multi-seed physical MAPPO training, checkpoint
+evaluation, trajectory metrics, and reproducible result records for three, four, and five UAVs.
+It is a feed-forward baseline; full-budget scientific validation remains pending lab experiments.
 
 See [the formation geometry contract](docs/formations.md) and
 [the multi-agent contract](docs/multi-agent-contracts.md) for the foundational APIs. The
@@ -19,6 +22,8 @@ The [PPO foundation](docs/ppo.md) explains the learning algorithm and its delibe
 reference task. The [MAPPO foundation](docs/mappo.md) explains parameter sharing, centralized
 training, and the explicit time/environment/agent batch axes. The
 [PyBullet adapter](docs/pybullet.md) documents simulator timing, reset behavior, and provenance.
+See the [Paper 04 baseline protocol](docs/paper04-baseline.md) for source deviations, budget
+definitions, local smoke commands, lab commands, and generated artifacts.
 
 ## Requirements
 

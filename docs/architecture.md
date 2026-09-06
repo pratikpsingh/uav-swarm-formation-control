@@ -48,3 +48,9 @@ the project-owned PPO implementation on a known single-agent task. Stage 5 appli
 to parameter-shared MAPPO with a local actor and centralized critic. Stage 6 adds a typed rigid-body
 backend, a pinned gym-pybullet-drones bridge, and a PyBullet environment that reuses the same
 observation, reward, termination, and metric builders as the kinematic environment.
+
+The corrected Paper 04 baseline composes both configuration schemas, replaces absolute-distance
+shaping with progress reward in its own environment, and evaluates complete trajectories through a
+controller protocol. Training has an optional update callback for progress records and diagnostic
+checkpoints. The experiment runner owns source/runtime provenance, completed-seed validation, and
+aggregation across independent training seeds. Scientific validation is separate from smoke tests.

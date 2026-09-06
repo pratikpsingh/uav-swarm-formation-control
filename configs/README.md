@@ -39,3 +39,8 @@ The PyBullet smoke gates are [one-drone hover](experiment/pybullet_hover.yaml) a
 [three-drone formation](experiment/pybullet_triangle.yaml). Their environment timestep must equal
 the reciprocal of the controller frequency, while the physics frequency must be an integer multiple
 of that rate.
+
+The `paper04_3uav.yaml`, `paper04_4uav.yaml`, and `paper04_5uav.yaml` experiments combine the
+MAPPO and PyBullet schemas with a strict `protocol` section containing five independent training
+seeds, an evaluation seed, and a profile label. Use `run-baseline --smoke` for a bounded local
+check; the unmodified research budgets are large. See [the baseline protocol](../docs/paper04-baseline.md).

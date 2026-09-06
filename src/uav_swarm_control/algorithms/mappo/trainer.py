@@ -227,6 +227,7 @@ def train_mappo(
     config: MAPPOConfig,
     *,
     seed: int,
+    on_update: Callable[[SharedActorCentralCritic, MAPPOUpdateMetrics], None] | None = None,
 ) -> MAPPOTrainingResult:
     """Train MAPPO with shared actors and parallel independent environments."""
     device = resolve_device(config.ppo.device)
@@ -294,6 +295,8 @@ def train_mappo(
                     clip_fraction=clip_fraction,
                 )
             )
+            if on_update is not None:
+                on_update(model, history[-1])
     finally:
         for environment in environments:
             environment.close()

@@ -2,8 +2,11 @@
 
 import argparse
 import logging
+import subprocess
 from collections.abc import Sequence
 from pathlib import Path
+
+import torch
 
 from uav_swarm_control.algorithms.mappo import (
     evaluate_mappo,
@@ -24,11 +27,17 @@ from uav_swarm_control.configuration import (
     load_ppo_experiment_config,
     load_pybullet_experiment_config,
 )
+from uav_swarm_control.configuration.baseline import load_baseline_config
 from uav_swarm_control.controllers.proportional import ProportionalPositionController
 from uav_swarm_control.environments.continuous_bandit import ContinuousTargetBandit
 from uav_swarm_control.environments.kinematic import KinematicSwarmEnvironment
 from uav_swarm_control.environments.pybullet import PyBulletSwarmEnvironment
 from uav_swarm_control.evaluation.artifacts import pybullet_episode_record, save_json_artifact
+from uav_swarm_control.evaluation.baseline import (
+    evaluate_saved_baseline,
+    run_baseline,
+    smoke_config,
+)
 from uav_swarm_control.evaluation.rollout import run_episode
 from uav_swarm_control.logging import LogLevel, configure_logging
 from uav_swarm_control.seeding import RandomStream, derive_seed
@@ -109,6 +118,29 @@ def build_parser() -> argparse.ArgumentParser:
     )
     evaluate_multi_agent.add_argument("--config", type=Path, required=True)
     evaluate_multi_agent.add_argument("--checkpoint", type=Path, required=True)
+    baseline = commands.add_parser(
+        "run-baseline", help="train and evaluate the corrected Paper 04 baseline across seeds"
+    )
+    baseline.add_argument("--config", type=Path, action="append", required=True)
+    baseline.add_argument("--output", type=Path, default=Path("artifacts/baselines"))
+    baseline.add_argument("--project-root", type=Path, default=Path.cwd())
+    baseline.add_argument(
+        "--smoke", action="store_true", help="256 training steps per seed; validates plumbing only"
+    )
+    baseline.add_argument(
+        "--resume",
+        action="store_true",
+        help="skip matching completed seeds; does not resume optimizer state",
+    )
+    baseline.add_argument("--torch-threads", type=int, default=1)
+    baseline_evaluate = commands.add_parser(
+        "evaluate-baseline", help="evaluate a saved baseline actor on compatible held-out episodes"
+    )
+    baseline_evaluate.add_argument("--config", type=Path, required=True)
+    baseline_evaluate.add_argument("--checkpoint", type=Path, required=True)
+    baseline_evaluate.add_argument("--output", type=Path, required=True)
+    baseline_evaluate.add_argument("--project-root", type=Path, default=Path.cwd())
+    baseline_evaluate.add_argument("--smoke", action="store_true")
     return parser
 
 
@@ -117,6 +149,48 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
     configure_logging(LogLevel(args.log_level))
+    if args.command == "evaluate-baseline":
+        try:
+            baseline_config = load_baseline_config(args.config)
+            if args.smoke:
+                baseline_config = smoke_config(baseline_config)
+            path = evaluate_saved_baseline(
+                baseline_config,
+                args.checkpoint,
+                args.output,
+                project_root=args.project_root.resolve(),
+            )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            parser.error(str(error))
+        LOGGER.info("Baseline evaluation complete: %s", path)
+        return
+    if args.command == "run-baseline":
+        if args.torch_threads < 1:
+            parser.error("--torch-threads must be positive.")
+        previous_threads = torch.get_num_threads()
+        try:
+            torch.set_num_threads(args.torch_threads)
+            # Validate the whole requested suite before starting its first training run.
+            configurations = [load_baseline_config(path) for path in args.config]
+            for baseline_config in configurations:
+                if args.smoke:
+                    baseline_config = smoke_config(baseline_config)
+                summary_path = run_baseline(
+                    baseline_config,
+                    args.output,
+                    project_root=args.project_root.resolve(),
+                    resume=args.resume,
+                )
+                LOGGER.info(
+                    "Baseline complete: profile=%s summary=%s",
+                    baseline_config.profile,
+                    summary_path,
+                )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            parser.error(str(error))
+        finally:
+            torch.set_num_threads(previous_threads)
+        return
     if args.command == "run-scripted":
         try:
             config = load_experiment_config(args.config)
