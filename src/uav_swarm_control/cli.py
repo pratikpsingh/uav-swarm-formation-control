@@ -26,6 +26,7 @@ from uav_swarm_control.configuration import (
     load_experiment_config,
     load_generalization_config,
     load_mappo_experiment_config,
+    load_obstacle_experiment_config,
     load_ppo_experiment_config,
     load_pybullet_experiment_config,
 )
@@ -154,6 +155,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="skip matching completed seeds; does not resume optimizer state",
     )
     generalization.add_argument("--torch-threads", type=int, default=1)
+    obstacles = commands.add_parser(
+        "run-obstacle-study",
+        help="train matched controls and a curriculum on oracle dynamic obstacles",
+    )
+    obstacles.add_argument("--config", type=Path, action="append", required=True)
+    obstacles.add_argument("--output", type=Path, default=Path("artifacts/obstacles"))
+    obstacles.add_argument("--project-root", type=Path, default=Path.cwd())
+    obstacles.add_argument(
+        "--smoke",
+        action="store_true",
+        help="retain every regimen, scenario, and seed with a plumbing-only budget",
+    )
+    obstacles.add_argument(
+        "--resume",
+        action="store_true",
+        help="skip matching completed seeds; does not resume optimizer state",
+    )
+    obstacles.add_argument("--torch-threads", type=int, default=1)
     baseline_evaluate = commands.add_parser(
         "evaluate-baseline", help="evaluate a saved baseline actor on compatible held-out episodes"
     )
@@ -292,6 +311,37 @@ def main(argv: Sequence[str] | None = None) -> None:
                 LOGGER.info(
                     "Generalization study complete: profile=%s summary=%s",
                     generalization_config.profile,
+                    summary_path,
+                )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            parser.error(str(error))
+        finally:
+            torch.set_num_threads(previous_threads)
+        return
+    if args.command == "run-obstacle-study":
+        if args.torch_threads < 1:
+            parser.error("--torch-threads must be positive.")
+        previous_threads = torch.get_num_threads()
+        try:
+            torch.set_num_threads(args.torch_threads)
+            configurations = [load_obstacle_experiment_config(path) for path in args.config]
+            from uav_swarm_control.evaluation.obstacles import (
+                obstacle_smoke_config,
+                run_obstacle_study,
+            )
+
+            for obstacle_config in configurations:
+                if args.smoke:
+                    obstacle_config = obstacle_smoke_config(obstacle_config)
+                summary_path = run_obstacle_study(
+                    obstacle_config,
+                    args.output,
+                    project_root=args.project_root.resolve(),
+                    resume=args.resume,
+                )
+                LOGGER.info(
+                    "Obstacle study complete: profile=%s summary=%s",
+                    obstacle_config.profile,
                     summary_path,
                 )
         except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:

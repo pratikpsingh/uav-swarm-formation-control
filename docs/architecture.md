@@ -37,6 +37,7 @@ observations.
 - `evaluation`: reward-independent metrics and evaluation orchestration.
 - `formations`: formation geometry, transforms, assignments, and errors.
 - `models`: neural-network architectures used by learned controllers.
+- `obstacles`: simulator-independent obstacle state, sampling, motion, and sphere clearance.
 - `observations`: local observations, centralized state, masks, and normalization.
 - `rewards`: individually testable reward components and composition.
 
@@ -74,3 +75,9 @@ expresses actor/critic inputs in the target frame. World-frame physics, rewards,
 and external metrics remain unchanged. The experiment runner trains independent seeds, evaluates
 fresh episodes from in-distribution and disjoint held-out pose ranges, and reports held-out-minus-
 in-distribution gaps without treating smoke policies as scientific evidence.
+
+Stage 10 keeps kinematic sphere mathematics in `obstacles`, curriculum/protocol validity in
+`configuration`, oracle observation/reward/termination composition in `environments`, and multi-seed
+paired comparisons in `evaluation`. Obstacle randomness has an independent stream. Fixed-width masks
+keep actor and critic architectures identical across no/static/dynamic cases. The Crazyflie dynamics
+remain physical, while obstacle bodies and perception are explicitly outside this first experiment.

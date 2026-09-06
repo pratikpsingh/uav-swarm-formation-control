@@ -21,6 +21,9 @@ Stage 9 adds episode-randomized plane, pyramid, cube, and sphere targets with di
 held-out translation, orientation, and scale ranges. Fixed/minimum-distance assignment and
 world/target coordinate frames are explicit experimental factors. The bounded smoke workflow is
 complete; full-budget lab runs are required before making a generalization claim.
+Stage 10 adds seeded oracle static and dynamic spherical obstacles, fixed-width masked actor/critic
+inputs, a none-to-static-to-dynamic curriculum, equal-budget controls, and matched multi-seed
+evaluation. The full smoke workflow is complete; obstacle-avoidance claims require lab training.
 
 See [the formation geometry contract](docs/formations.md) and
 [the multi-agent contract](docs/multi-agent-contracts.md) for the foundational APIs. The
@@ -35,6 +38,8 @@ definitions, local smoke commands, lab commands, and generated artifacts. The
 information access, comparison guard and remaining limitations. The
 [3D generalization protocol](docs/3d-generalization.md) defines target-pose sampling, assignment,
 coordinate frames, held-out evaluation, and the distinction between software and research gates.
+The [dynamic-obstacle protocol](docs/dynamic-obstacles.md) documents oracle information, motion and
+collision semantics, curriculum controls, safety metrics, artifacts, and current limitations.
 
 ## Requirements
 
@@ -130,6 +135,16 @@ uv run uav-swarm-control run-generalization \
   --config configs/experiment/stage9_sphere_8uav.yaml \
   --smoke \
   --output artifacts/generalization/check \
+  --project-root .
+```
+
+Run the complete bounded Stage 10 obstacle study:
+
+```bash
+uv run uav-swarm-control run-obstacle-study \
+  --config configs/experiment/stage10_dynamic_obstacles_4uav.yaml \
+  --smoke \
+  --output artifacts/obstacles/check \
   --project-root .
 ```
 

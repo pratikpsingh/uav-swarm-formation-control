@@ -19,15 +19,17 @@ from uav_swarm_control.agents import AgentId
 class LocalObservations:
     """Batched local information available to decentralized actors.
 
-    Ego values have shape (N, E), neighbors have shape (N, K, F), and
-    the neighbor mask has shape (N, K). False mask entries are padding
-    and their feature rows must contain zeros.
+    Ego values have shape (N, E), neighbors have shape (N, K, F), obstacles
+    have shape (N, M, 7), and each variable-cardinality axis has a mask.
+    False mask entries are padding and their feature rows must contain zeros.
     """
 
     agent_ids: Sequence[AgentId]
     ego: Float32Array
     neighbors: Float32Array
     neighbor_mask: BoolArray
+    obstacles: Float32Array | None = None
+    obstacle_mask: BoolArray | None = None
 
     def __post_init__(self) -> None:
         ego = immutable_float32_array(self.ego, name="ego", dimensions=2)
@@ -51,11 +53,36 @@ class LocalObservations:
         if np.any(neighbors[~mask] != 0.0):
             raise ValueError("masked neighbor slots must contain only zero padding.")
 
+        if (self.obstacles is None) != (self.obstacle_mask is None):
+            raise ValueError("obstacles and obstacle_mask must either both be provided or omitted.")
+        obstacles = immutable_float32_array(
+            np.zeros((num_agents, 0, 7), dtype=np.float32)
+            if self.obstacles is None
+            else self.obstacles,
+            name="obstacles",
+            dimensions=3,
+        )
+        obstacle_mask = immutable_bool_array(
+            np.zeros((num_agents, 0), dtype=np.bool_)
+            if self.obstacle_mask is None
+            else self.obstacle_mask,
+            name="obstacle_mask",
+            dimensions=2,
+        )
+        if obstacles.shape[0] != num_agents or obstacles.shape[2] != 7:
+            raise ValueError("obstacles must have shape (N, M, 7).")
+        if obstacle_mask.shape != obstacles.shape[:2]:
+            raise ValueError("obstacle_mask must match the obstacle agent and slot dimensions.")
+        if np.any(obstacles[~obstacle_mask] != 0.0):
+            raise ValueError("masked obstacle slots must contain only zero padding.")
+
         identifiers = validated_agent_ids(self.agent_ids, expected=num_agents)
         object.__setattr__(self, "agent_ids", identifiers)
         object.__setattr__(self, "ego", ego)
         object.__setattr__(self, "neighbors", neighbors)
         object.__setattr__(self, "neighbor_mask", mask)
+        object.__setattr__(self, "obstacles", obstacles)
+        object.__setattr__(self, "obstacle_mask", obstacle_mask)
 
     @property
     def num_agents(self) -> int:
@@ -66,6 +93,12 @@ class LocalObservations:
     def max_neighbors(self) -> int:
         """Number of padded neighbor slots per agent."""
         return self.neighbors.shape[1]
+
+    @property
+    def max_obstacles(self) -> int:
+        """Number of padded spherical-obstacle slots per agent."""
+        assert self.obstacles is not None
+        return self.obstacles.shape[1]
 
 
 @dataclass(frozen=True, slots=True)

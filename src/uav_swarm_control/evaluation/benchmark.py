@@ -58,6 +58,7 @@ def evaluate_benchmark(
     collision_distance_m: float,
     on_episode_complete: Callable[[Mapping[str, float]], None] | None = None,
     episode_metadata: Callable[[PositionedEnvironment], Mapping[str, float]] | None = None,
+    episode_metadata_prefix: str = "pose",
 ) -> list[dict[str, float]]:
     """Measure whole trajectories, including initial separation and terminal states.
 
@@ -68,6 +69,8 @@ def evaluate_benchmark(
     """
     if episodes < 1 or horizon < 1 or time_step_seconds <= 0 or collision_distance_m <= 0:
         raise ValueError("episodes, horizon, timestep, and collision distance must be positive.")
+    if not episode_metadata_prefix or not episode_metadata_prefix.isidentifier():
+        raise ValueError("episode_metadata_prefix must be a non-empty identifier.")
     results: list[dict[str, float]] = []
     environment = factory()
     try:
@@ -89,6 +92,10 @@ def evaluate_benchmark(
             separation = float(initial_distances.min())
             collision_any = bool(np.any(initial_distances < collision_distance_m))
             collision_pair_steps = 0.0
+            obstacle_collision_any = False
+            obstacle_collision_pair_steps = 0.0
+            obstacle_clearance: float | None = None
+            reports_obstacles = False
             path_length = 0.0
             squared_delta = 0.0
             action_frame_clip = 0.0
@@ -109,6 +116,18 @@ def evaluate_benchmark(
                 separation = min(separation, metrics["minimum_separation_m"])
                 collision_pair_steps += metrics["collision_pairs"]
                 collision_any |= metrics["collision_pairs"] > 0
+                if "obstacle_collision_pairs" in metrics:
+                    pair_count = metrics["obstacle_collision_pairs"]
+                    obstacle_collision_pair_steps += pair_count
+                    obstacle_collision_any |= pair_count > 0
+                    reports_obstacles = True
+                if "minimum_obstacle_clearance_m" in metrics:
+                    current_clearance = metrics["minimum_obstacle_clearance_m"]
+                    obstacle_clearance = (
+                        current_clearance
+                        if obstacle_clearance is None
+                        else min(obstacle_clearance, current_clearance)
+                    )
                 squared_delta += metrics["control_delta_rms"] ** 2
                 if "action_frame_clip_fraction" in metrics:
                     action_frame_clip += metrics["action_frame_clip_fraction"]
@@ -122,7 +141,9 @@ def evaluate_benchmark(
                         "episode_seed": episode_seed,
                         "success": metrics["success"],
                         "collision_free_success": float(
-                            metrics["success"] > 0 and not collision_any
+                            metrics["success"] > 0
+                            and not collision_any
+                            and not obstacle_collision_any
                         ),
                         "collision_any": float(collision_any),
                         "collision_pair_steps": collision_pair_steps,
@@ -134,14 +155,24 @@ def evaluate_benchmark(
                         "final_position_rmse_m": metrics["position_rmse_m"],
                         "steps": float(step),
                         "simulated_seconds": step * time_step_seconds,
+                        "capped_time_to_goal_seconds": (
+                            step * time_step_seconds
+                            if metrics["success"] > 0
+                            else horizon * time_step_seconds
+                        ),
                         "mean_agent_return": episode_return,
                         "terminated": float(transition.terminated),
                         "truncated": float(transition.truncated),
                     }
                     if reports_action_frame_clip:
                         record["action_frame_clip_fraction"] = action_frame_clip / step
+                    if reports_obstacles:
+                        record["obstacle_collision_any"] = float(obstacle_collision_any)
+                        record["obstacle_collision_pair_steps"] = obstacle_collision_pair_steps
+                    if obstacle_clearance is not None:
+                        record["minimum_obstacle_clearance_m"] = obstacle_clearance
                     for name, value in metadata.items():
-                        key = f"pose/{name}"
+                        key = f"{episode_metadata_prefix}/{name}"
                         if key in record:
                             raise ValueError(f"episode metadata collides with metric {key!r}.")
                         record[key] = float(value)

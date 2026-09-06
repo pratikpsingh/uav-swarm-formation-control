@@ -60,3 +60,9 @@ the full 2x2 assignment/frame ablation; the other formations use the selected `m
 variant. The source configurations are research budgets. `run-generalization --smoke` creates an
 explicit bounded copy without changing the source YAML. See
 [the 3D generalization protocol](../docs/3d-generalization.md).
+
+`stage10_dynamic_obstacles_4uav.yaml` freezes the four-UAV controlled obstacle study. It declares
+the oracle sphere distribution, sensing and safety bounds, one fixed pose range and representation,
+three equal-budget training regimens, all four matched evaluation scenarios, and five training
+seeds. `run-obstacle-study --smoke` reduces only runtime-related values. See
+[the dynamic-obstacle protocol](../docs/dynamic-obstacles.md).

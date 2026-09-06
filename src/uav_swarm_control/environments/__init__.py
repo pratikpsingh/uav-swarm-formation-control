@@ -8,6 +8,7 @@ from uav_swarm_control.environments.contracts import (
     StepResult,
 )
 from uav_swarm_control.environments.generalization import GeneralizedFormationEnvironment
+from uav_swarm_control.environments.obstacles import ObstacleFormationEnvironment
 from uav_swarm_control.environments.single_agent import (
     SingleAgentEnvironment,
     SingleAgentReset,
@@ -19,6 +20,7 @@ __all__ = [
     "GeneralizedFormationEnvironment",
     "MultiAgentEnvironment",
     "NormalizedVelocityActions",
+    "ObstacleFormationEnvironment",
     "ResetResult",
     "SingleAgentEnvironment",
     "SingleAgentReset",

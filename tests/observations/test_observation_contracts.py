@@ -30,6 +30,9 @@ def test_local_observations_have_canonical_shapes_and_dtypes() -> None:
     assert observations.ego.dtype == np.float32
     assert observations.neighbors.dtype == np.float32
     assert observations.neighbor_mask.dtype == np.bool_
+    assert observations.max_obstacles == 0
+    assert observations.obstacles is not None
+    assert observations.obstacles.shape == (2, 0, 7)
 
 
 def test_contract_arrays_are_copied_and_immutable() -> None:
@@ -64,6 +67,18 @@ def test_neighbor_mask_requires_boolean_dtype() -> None:
             ego=np.zeros((1, 1), dtype=np.float32),
             neighbors=np.zeros((1, 1, 1), dtype=np.float32),
             neighbor_mask=np.zeros((1, 1), dtype=np.int64),  # type: ignore[arg-type]
+        )
+
+
+def test_masked_obstacle_slots_must_be_zero() -> None:
+    with pytest.raises(ValueError, match="masked obstacle slots"):
+        LocalObservations(
+            agent_ids=sequential_agent_ids(1),
+            ego=np.zeros((1, 1), dtype=np.float32),
+            neighbors=np.zeros((1, 0, 1), dtype=np.float32),
+            neighbor_mask=np.zeros((1, 0), dtype=np.bool_),
+            obstacles=np.ones((1, 1, 7), dtype=np.float32),
+            obstacle_mask=np.array([[False]], dtype=np.bool_),
         )
 
 
