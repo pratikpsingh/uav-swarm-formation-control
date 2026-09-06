@@ -7,6 +7,7 @@ from uav_swarm_control.environments.contracts import (
     ResetResult,
     StepResult,
 )
+from uav_swarm_control.environments.generalization import GeneralizedFormationEnvironment
 from uav_swarm_control.environments.single_agent import (
     SingleAgentEnvironment,
     SingleAgentReset,
@@ -15,6 +16,7 @@ from uav_swarm_control.environments.single_agent import (
 
 __all__ = [
     "ContinuousTargetBandit",
+    "GeneralizedFormationEnvironment",
     "MultiAgentEnvironment",
     "NormalizedVelocityActions",
     "ResetResult",

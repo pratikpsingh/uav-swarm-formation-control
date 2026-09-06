@@ -4,11 +4,19 @@ import hashlib
 import json
 import platform
 import subprocess
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 import torch
+
+
+def _installed_version(distribution: str) -> str:
+    """Report an optional distribution without making it a runtime dependency."""
+    try:
+        return version(distribution)
+    except PackageNotFoundError:
+        return "not-installed"
 
 
 def stable_digest(value: object) -> str:
@@ -53,9 +61,9 @@ def collect_provenance(project_root: Path) -> dict[str, object]:
         "python": platform.python_version(),
         "platform": platform.platform(),
         "torch": str(torch.__version__),
-        "numpy": version("numpy"),
-        "pybullet": version("pybullet"),
-        "scipy": version("scipy"),
+        "numpy": _installed_version("numpy"),
+        "pybullet": _installed_version("pybullet"),
+        "scipy": _installed_version("scipy"),
         "torch_threads": torch.get_num_threads(),
     }
 

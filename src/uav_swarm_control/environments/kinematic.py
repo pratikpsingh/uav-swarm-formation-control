@@ -40,6 +40,7 @@ class KinematicSwarmEnvironment:
         roll, pitch, yaw = config.formation.euler_radians
         rotation = rotation_matrix_from_euler(roll, pitch, yaw)
         self._relative_targets = template @ rotation.T
+        self._initial_relative_positions = self._relative_targets.copy()
         self._targets = transform(
             template,
             rotation=rotation,
@@ -85,7 +86,7 @@ class KinematicSwarmEnvironment:
             size=(len(self._agent_ids), 3),
         )
         initial_center = np.asarray(self._config.task.initial_center_m, dtype=np.float64)
-        self._positions = self._relative_targets + initial_center + noise
+        self._positions = self._initial_relative_positions + initial_center + noise
         self._velocities = np.zeros_like(self._positions)
         self._previous_actions = np.zeros_like(self._positions)
         self._step_count = 0

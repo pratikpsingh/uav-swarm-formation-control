@@ -51,3 +51,12 @@ cost, physical-limit and solver-tolerance choice and rejects missing or unknown 
 composes that controller configuration with one or more Paper 04 task files at runtime. This keeps
 the environment protocol identical while preventing controller settings from being duplicated in
 each 3/4/5-UAV task. See [the DMPC protocol](../docs/dmpc-baseline.md).
+
+The four `stage9_*` experiment files define plane, pyramid, cube, and sphere generalization tasks.
+Each contains two non-overlapping seven-dimensional target-pose boxes: three translation offsets,
+three Euler-angle offsets, and one positive scale. They also declare assignment and coordinate-frame
+variants, five independent training seeds, and a separate evaluation root seed. The cube task carries
+the full 2x2 assignment/frame ablation; the other formations use the selected `minimum-target`
+variant. The source configurations are research budgets. `run-generalization --smoke` creates an
+explicit bounded copy without changing the source YAML. See
+[the 3D generalization protocol](../docs/3d-generalization.md).

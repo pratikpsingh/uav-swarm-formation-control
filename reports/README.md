@@ -4,3 +4,6 @@ Small, reviewed experiment summaries and paper-comparison tables belong here. Ra
 videos, checkpoints, and tracking databases belong in ignored artifact storage. Every reported run
 must identify its resolved configuration, random seed, Git revision, dependency lock, hardware, and
 simulator version.
+
+Stage-specific smoke reports verify software pipelines and explicitly do not rank methods or establish
+policy convergence. See `stage9-3d-smoke-verification.md` for the 3D generalization plumbing gate.

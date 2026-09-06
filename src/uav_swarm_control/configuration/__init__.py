@@ -8,6 +8,14 @@ from uav_swarm_control.configuration.dmpc import (
     dmpc_config_from_mapping,
     load_dmpc_config,
 )
+from uav_swarm_control.configuration.generalization import (
+    AssignmentMode,
+    CoordinateFrame,
+    GeneralizationConfig,
+    GeneralizationVariant,
+    generalization_config_from_mapping,
+    load_generalization_config,
+)
 from uav_swarm_control.configuration.loading import (
     experiment_config_from_mapping,
     load_experiment_config,
@@ -48,8 +56,10 @@ from uav_swarm_control.configuration.pybullet import (
 )
 
 __all__ = [
+    "AssignmentMode",
     "ConfigurationError",
     "ContinuousBanditConfig",
+    "CoordinateFrame",
     "DMPCConfig",
     "DMPCLimits",
     "DMPCSolverConfig",
@@ -57,6 +67,8 @@ __all__ = [
     "EnvironmentConfig",
     "ExperimentConfig",
     "FormationConfig",
+    "GeneralizationConfig",
+    "GeneralizationVariant",
     "KinematicTaskConfig",
     "MAPPOConfig",
     "MAPPOExperimentConfig",
@@ -72,8 +84,10 @@ __all__ = [
     "dmpc_config_from_mapping",
     "experiment_config_from_mapping",
     "experiment_config_to_dict",
+    "generalization_config_from_mapping",
     "load_dmpc_config",
     "load_experiment_config",
+    "load_generalization_config",
     "load_mappo_experiment_config",
     "load_ppo_experiment_config",
     "load_pybullet_experiment_config",

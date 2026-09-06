@@ -66,3 +66,11 @@ choices in `configuration`, and experiment orchestration in `evaluation`. Both M
 shared provenance module and a hashed comparison protocol. The hash covers environment physics,
 evaluation schedule, horizon and metric schema; result comparison fails closed when hashes differ.
 Controller-specific solver diagnostics remain outside common task metrics.
+
+Stage 9 keeps pose sampling and linear assignment in the simulator-independent `formations`
+package. A specialized physical environment samples a target pose from its own deterministic random
+stream, leaves the initial formation geometry independent, assigns target points, and optionally
+expresses actor/critic inputs in the target frame. World-frame physics, rewards, terminal conditions,
+and external metrics remain unchanged. The experiment runner trains independent seeds, evaluates
+fresh episodes from in-distribution and disjoint held-out pose ranges, and reports held-out-minus-
+in-distribution gaps without treating smoke policies as scientific evidence.

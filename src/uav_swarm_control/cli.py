@@ -24,6 +24,7 @@ from uav_swarm_control.configuration import (
     ConfigurationError,
     load_dmpc_config,
     load_experiment_config,
+    load_generalization_config,
     load_mappo_experiment_config,
     load_ppo_experiment_config,
     load_pybullet_experiment_config,
@@ -135,6 +136,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="skip matching completed seeds; does not resume optimizer state",
     )
     baseline.add_argument("--torch-threads", type=int, default=1)
+    generalization = commands.add_parser(
+        "run-generalization",
+        help="train and evaluate Stage 9 policies on disjoint 3D pose splits",
+    )
+    generalization.add_argument("--config", type=Path, action="append", required=True)
+    generalization.add_argument("--output", type=Path, default=Path("artifacts/generalization"))
+    generalization.add_argument("--project-root", type=Path, default=Path.cwd())
+    generalization.add_argument(
+        "--smoke",
+        action="store_true",
+        help="retain all variants and seeds with a bounded plumbing-only budget",
+    )
+    generalization.add_argument(
+        "--resume",
+        action="store_true",
+        help="skip matching completed seeds; does not resume optimizer state",
+    )
+    generalization.add_argument("--torch-threads", type=int, default=1)
     baseline_evaluate = commands.add_parser(
         "evaluate-baseline", help="evaluate a saved baseline actor on compatible held-out episodes"
     )
@@ -241,6 +260,38 @@ def main(argv: Sequence[str] | None = None) -> None:
                 LOGGER.info(
                     "Baseline complete: profile=%s summary=%s",
                     baseline_config.profile,
+                    summary_path,
+                )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            parser.error(str(error))
+        finally:
+            torch.set_num_threads(previous_threads)
+        return
+    if args.command == "run-generalization":
+        if args.torch_threads < 1:
+            parser.error("--torch-threads must be positive.")
+        previous_threads = torch.get_num_threads()
+        try:
+            torch.set_num_threads(args.torch_threads)
+            # Validate the entire suite before creating any training artifacts.
+            configurations = [load_generalization_config(path) for path in args.config]
+            from uav_swarm_control.evaluation.generalization import (
+                generalization_smoke_config,
+                run_generalization,
+            )
+
+            for generalization_config in configurations:
+                if args.smoke:
+                    generalization_config = generalization_smoke_config(generalization_config)
+                summary_path = run_generalization(
+                    generalization_config,
+                    args.output,
+                    project_root=args.project_root.resolve(),
+                    resume=args.resume,
+                )
+                LOGGER.info(
+                    "Generalization study complete: profile=%s summary=%s",
+                    generalization_config.profile,
                     summary_path,
                 )
         except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:

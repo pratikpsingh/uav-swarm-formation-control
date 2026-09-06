@@ -57,6 +57,7 @@ class PyBulletSwarmEnvironment:
         roll, pitch, yaw = experiment.formation.euler_radians
         rotation = rotation_matrix_from_euler(roll, pitch, yaw)
         self._relative_targets = template @ rotation.T
+        self._initial_relative_positions = self._relative_targets.copy()
         self._targets = transform(template, rotation=rotation, offset=experiment.formation.center_m)
         nominal_initial = self._relative_targets + np.asarray(
             experiment.task.initial_center_m,
@@ -106,7 +107,7 @@ class PyBulletSwarmEnvironment:
             self._config.experiment.task.initial_center_m,
             dtype=np.float64,
         )
-        initial_positions = self._relative_targets + initial_center + noise
+        initial_positions = self._initial_relative_positions + initial_center + noise
         if np.any(initial_positions[:, 2] <= 0.0):
             raise ValueError("all sampled initial drone altitudes must be greater than zero.")
         self._rigid_state = self._backend.reset(

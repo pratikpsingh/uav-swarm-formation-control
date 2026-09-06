@@ -1,5 +1,10 @@
 """Framework-independent formation geometry."""
 
+from uav_swarm_control.formations.assignment import (
+    FormationAssignment,
+    fixed_assignment,
+    minimum_distance_assignment,
+)
 from uav_swarm_control.formations.metrics import (
     RigidAlignment,
     formation_diameter,
@@ -15,6 +20,12 @@ from uav_swarm_control.formations.metrics import (
     shape_sse,
     squared_position_errors,
     squared_shape_errors,
+)
+from uav_swarm_control.formations.poses import (
+    FormationPose,
+    FormationPoseRange,
+    pose_ranges_overlap,
+    sample_formation_pose,
 )
 from uav_swarm_control.formations.templates import (
     FormationKind,
@@ -39,16 +50,22 @@ from uav_swarm_control.formations.transforms import (
 )
 
 __all__ = [
+    "FormationAssignment",
     "FormationKind",
+    "FormationPose",
+    "FormationPoseRange",
     "RigidAlignment",
     "center",
     "create_formation",
     "cubic_lattice",
+    "fixed_assignment",
     "formation_diameter",
     "line",
+    "minimum_distance_assignment",
     "normalized_shape_mse",
     "normalized_shape_rmse",
     "pairwise_distances",
+    "pose_ranges_overlap",
     "position_mse",
     "position_rmse",
     "position_sse",
@@ -56,6 +73,7 @@ __all__ = [
     "rigid_alignment",
     "rotate",
     "rotation_matrix_from_euler",
+    "sample_formation_pose",
     "scale",
     "shape_mse",
     "shape_rmse",

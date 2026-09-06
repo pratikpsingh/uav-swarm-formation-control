@@ -3,9 +3,10 @@
 from pathlib import Path
 
 import pytest
-from pytest import CaptureFixture
+from pytest import CaptureFixture, MonkeyPatch
 
 from uav_swarm_control.cli import main
+from uav_swarm_control.configuration import GeneralizationConfig
 
 
 def _write_small_ppo_config(path: Path) -> None:
@@ -206,3 +207,50 @@ def test_cli_trains_saves_and_evaluates_mappo(
 
     assert "MAPPO evaluation complete" in evaluation_output.err
     assert "checkpoint_steps=128" in evaluation_output.err
+
+
+def test_cli_validates_and_runs_generalization_smoke(
+    tmp_path: Path,
+    capsys: CaptureFixture[str],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """The command should apply explicit smoke overrides before orchestration."""
+    from uav_swarm_control.evaluation import generalization
+
+    calls: list[tuple[GeneralizationConfig, Path, Path, bool]] = []
+
+    def fake_run(
+        config: GeneralizationConfig,
+        output: Path,
+        *,
+        project_root: Path,
+        resume: bool = False,
+    ) -> Path:
+        calls.append((config, output, project_root, resume))
+        return output / "summary.json"
+
+    monkeypatch.setattr(generalization, "run_generalization", fake_run)
+    root = Path(__file__).parents[1]
+    output = tmp_path / "results"
+    main(
+        [
+            "run-generalization",
+            "--config",
+            str(root / "configs/experiment/stage9_plane_4uav.yaml"),
+            "--smoke",
+            "--resume",
+            "--output",
+            str(output),
+            "--project-root",
+            str(root),
+        ]
+    )
+
+    assert len(calls) == 1
+    config, called_output, project_root, resume = calls[0]
+    assert config.profile == "smoke"
+    assert config.mappo.algorithm.ppo.total_steps == 256
+    assert called_output == output
+    assert project_root == root.resolve()
+    assert resume
+    assert "Generalization study complete" in capsys.readouterr().err

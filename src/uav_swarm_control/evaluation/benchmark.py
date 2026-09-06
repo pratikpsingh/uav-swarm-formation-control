@@ -57,6 +57,7 @@ def evaluate_benchmark(
     time_step_seconds: float,
     collision_distance_m: float,
     on_episode_complete: Callable[[Mapping[str, float]], None] | None = None,
+    episode_metadata: Callable[[PositionedEnvironment], Mapping[str, float]] | None = None,
 ) -> list[dict[str, float]]:
     """Measure whole trajectories, including initial separation and terminal states.
 
@@ -75,6 +76,9 @@ def evaluate_benchmark(
                 controller.reset()
             episode_seed = derive_indexed_seed(seed, RandomStream.EVALUATION, episode)
             reset = environment.reset(seed=episode_seed)
+            metadata = dict(episode_metadata(environment)) if episode_metadata is not None else {}
+            if any(not name or not math.isfinite(float(value)) for name, value in metadata.items()):
+                raise ValueError("episode metadata requires non-empty names and finite values.")
             observations = reset.observations
             centralized_state = reset.centralized_state
             previous = environment.positions
@@ -87,6 +91,8 @@ def evaluate_benchmark(
             collision_pair_steps = 0.0
             path_length = 0.0
             squared_delta = 0.0
+            action_frame_clip = 0.0
+            reports_action_frame_clip = False
             formation_error = 0.0
             episode_return = 0.0
             for step in range(1, horizon + 1):
@@ -104,6 +110,9 @@ def evaluate_benchmark(
                 collision_pair_steps += metrics["collision_pairs"]
                 collision_any |= metrics["collision_pairs"] > 0
                 squared_delta += metrics["control_delta_rms"] ** 2
+                if "action_frame_clip_fraction" in metrics:
+                    action_frame_clip += metrics["action_frame_clip_fraction"]
+                    reports_action_frame_clip = True
                 formation_error += metrics["normalized_shape_rmse"]
                 episode_return += float(transition.rewards.mean())
                 observations = transition.observations
@@ -129,6 +138,13 @@ def evaluate_benchmark(
                         "terminated": float(transition.terminated),
                         "truncated": float(transition.truncated),
                     }
+                    if reports_action_frame_clip:
+                        record["action_frame_clip_fraction"] = action_frame_clip / step
+                    for name, value in metadata.items():
+                        key = f"pose/{name}"
+                        if key in record:
+                            raise ValueError(f"episode metadata collides with metric {key!r}.")
+                        record[key] = float(value)
                     results.append(record)
                     if on_episode_complete is not None:
                         on_episode_complete(record)

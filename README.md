@@ -17,6 +17,10 @@ It is a feed-forward baseline; full-budget scientific validation remains pending
 A clean-room classical DMPC adaptation now uses the same physical tasks, held-out episode seeds and
 metrics. Guarded comparison artifacts reject incompatible environment/evaluation protocols and keep
 DMPC optimization diagnostics separate from task performance.
+Stage 9 adds episode-randomized plane, pyramid, cube, and sphere targets with disjoint training and
+held-out translation, orientation, and scale ranges. Fixed/minimum-distance assignment and
+world/target coordinate frames are explicit experimental factors. The bounded smoke workflow is
+complete; full-budget lab runs are required before making a generalization claim.
 
 See [the formation geometry contract](docs/formations.md) and
 [the multi-agent contract](docs/multi-agent-contracts.md) for the foundational APIs. The
@@ -28,7 +32,9 @@ training, and the explicit time/environment/agent batch axes. The
 See the [Paper 04 baseline protocol](docs/paper04-baseline.md) for source deviations, budget
 definitions, local smoke commands, lab commands, and generated artifacts. The
 [classical DMPC protocol](docs/dmpc-baseline.md) documents its model, native-repository deviations,
-information access, comparison guard and remaining limitations.
+information access, comparison guard and remaining limitations. The
+[3D generalization protocol](docs/3d-generalization.md) defines target-pose sampling, assignment,
+coordinate frames, held-out evaluation, and the distinction between software and research gates.
 
 ## Requirements
 
@@ -111,6 +117,19 @@ uv run uav-swarm-control run-dmpc \
   --controller configs/algorithm/dmpc_native.yaml \
   --smoke \
   --output artifacts/baselines/dmpc-check \
+  --project-root .
+```
+
+Run the complete bounded Stage 9 3D generalization suite:
+
+```bash
+uv run uav-swarm-control run-generalization \
+  --config configs/experiment/stage9_plane_4uav.yaml \
+  --config configs/experiment/stage9_pyramid_5uav.yaml \
+  --config configs/experiment/stage9_cube_8uav.yaml \
+  --config configs/experiment/stage9_sphere_8uav.yaml \
+  --smoke \
+  --output artifacts/generalization/check \
   --project-root .
 ```
 
