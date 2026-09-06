@@ -39,6 +39,27 @@ class NeighborEncoderSpec:
         return self.ego_features + self.max_neighbors * (self.neighbor_features + 1)
 
 
+def masked_mean_neighbor_features(
+    observations: Tensor,
+    spec: NeighborEncoderSpec,
+    neighbor_encoder: nn.Module,
+) -> Tensor:
+    """Return ego, masked-mean neighbor, and trailing features in a fixed layout."""
+    if observations.shape[-1] < spec.structured_width:
+        raise ValueError("local observation is too narrow for the neighbor encoder layout.")
+    ego_end = spec.ego_features
+    neighbors_end = ego_end + spec.max_neighbors * spec.neighbor_features
+    mask_end = neighbors_end + spec.max_neighbors
+    ego = observations[..., :ego_end]
+    neighbors = observations[..., ego_end:neighbors_end].reshape(
+        *observations.shape[:-1], spec.max_neighbors, spec.neighbor_features
+    )
+    mask = observations[..., neighbors_end:mask_end].unsqueeze(-1)
+    encoded = neighbor_encoder(neighbors) * mask
+    pooled = encoded.sum(dim=-2) / mask.sum(dim=-2).clamp_min(1.0)
+    return torch.cat((ego, pooled, observations[..., mask_end:]), dim=-1)
+
+
 class MaskedMeanNeighborActor(nn.Module):
     """Encode each neighbor with shared weights and mean-pool only valid rows."""
 
@@ -69,16 +90,5 @@ class MaskedMeanNeighborActor(nn.Module):
 
     def forward(self, observations: Tensor) -> Tensor:
         """Return outputs invariant to permutations of neighbor slots and their masks."""
-        spec = self.spec
-        ego_end = spec.ego_features
-        neighbors_end = ego_end + spec.max_neighbors * spec.neighbor_features
-        mask_end = neighbors_end + spec.max_neighbors
-        ego = observations[..., :ego_end]
-        neighbors = observations[..., ego_end:neighbors_end].reshape(
-            *observations.shape[:-1], spec.max_neighbors, spec.neighbor_features
-        )
-        mask = observations[..., neighbors_end:mask_end].unsqueeze(-1)
-        encoded = self.neighbor_encoder(neighbors) * mask
-        pooled = encoded.sum(dim=-2) / mask.sum(dim=-2).clamp_min(1.0)
-        policy_input = torch.cat((ego, pooled, observations[..., mask_end:]), dim=-1)
+        policy_input = masked_mean_neighbor_features(observations, self.spec, self.neighbor_encoder)
         return self.policy(policy_input)

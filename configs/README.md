@@ -6,6 +6,7 @@ They will be grouped by responsibility:
 ```text
 configs/
 ├── algorithm/     Optimizer, network, rollout, and update settings
+├── deployment/    Compression candidates, gates, and measurement protocols
 ├── environment/   Simulator, dynamics, timing, and world settings
 ├── experiment/    Reproducible compositions of the other configuration groups
 └── task/          Formation, goal, obstacle, observation, and reward settings
@@ -73,3 +74,9 @@ obstacles; defines fixed-two, fixed-all, and variable-topology training distribu
 independent training seeds; and fixes a 24-byte relative-state payload model. Use the
 run-communication-study command with its smoke option for bounded plumbing validation. See
 [the neighbor protocol](../docs/communication-study.md).
+
+`deployment/stage12_policy_compression.yaml` declares the teacher acceptance gates, three
+feed-forward widths, GRU/LSTM comparison, structured-pruning and INT8 treatments, five
+distillation seeds, episode-level dataset split, host benchmark protocol, and energy measurement
+status. The deployment config is composed with exactly one Stage 11 task and matching teacher
+checkpoint/result pair at runtime. See [the compression protocol](../docs/policy-compression.md).

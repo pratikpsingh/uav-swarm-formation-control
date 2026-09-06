@@ -23,6 +23,7 @@ from uav_swarm_control.algorithms.ppo import (
 from uav_swarm_control.configuration import (
     ConfigurationError,
     load_communication_experiment_config,
+    load_deployment_study_config,
     load_dmpc_config,
     load_experiment_config,
     load_generalization_config,
@@ -192,6 +193,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="skip matching completed seeds; does not resume optimizer state",
     )
     communication.add_argument("--torch-threads", type=int, default=1)
+    deployment = commands.add_parser(
+        "run-deployment-study",
+        help="compress a validated Stage 11 teacher and benchmark actor-only artifacts",
+    )
+    deployment.add_argument("--task", type=Path, required=True)
+    deployment.add_argument("--deployment", type=Path, required=True)
+    deployment.add_argument("--teacher-checkpoint", type=Path, required=True)
+    deployment.add_argument("--teacher-result", type=Path, required=True)
+    deployment.add_argument("--output", type=Path, default=Path("artifacts/deployment"))
+    deployment.add_argument("--project-root", type=Path, default=Path.cwd())
+    deployment.add_argument(
+        "--smoke",
+        action="store_true",
+        help="retain every candidate and seed with a plumbing-only budget",
+    )
+    deployment.add_argument("--torch-threads", type=int, default=1)
     baseline_evaluate = commands.add_parser(
         "evaluate-baseline", help="evaluate a saved baseline actor on compatible held-out episodes"
     )
@@ -363,6 +380,38 @@ def main(argv: Sequence[str] | None = None) -> None:
                     obstacle_config.profile,
                     summary_path,
                 )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            parser.error(str(error))
+        finally:
+            torch.set_num_threads(previous_threads)
+        return
+    if args.command == "run-deployment-study":
+        if args.torch_threads < 1:
+            parser.error("--torch-threads must be positive.")
+        previous_threads = torch.get_num_threads()
+        try:
+            torch.set_num_threads(args.torch_threads)
+            task = load_communication_experiment_config(args.task)
+            study = load_deployment_study_config(args.deployment)
+            if args.smoke:
+                from uav_swarm_control.configuration.deployment import deployment_smoke_config
+                from uav_swarm_control.evaluation.communication import communication_smoke_config
+
+                task = communication_smoke_config(task)
+                study = deployment_smoke_config(study)
+            from uav_swarm_control.evaluation.deployment import run_deployment_study
+
+            summary_path = run_deployment_study(
+                task,
+                study,
+                args.teacher_checkpoint,
+                args.teacher_result,
+                args.output,
+                project_root=args.project_root.resolve(),
+            )
+            LOGGER.info(
+                "Deployment study complete: profile=%s summary=%s", study.profile, summary_path
+            )
         except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
             parser.error(str(error))
         finally:

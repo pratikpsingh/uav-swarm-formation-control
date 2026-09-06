@@ -1,6 +1,7 @@
 """Bridge to one immutable revision of gym-pybullet-drones."""
 
 import json
+import warnings
 from collections.abc import Callable, Mapping
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, distribution
@@ -108,21 +109,29 @@ class GymPyBulletDronesBackend:
             "gym_pybullet_drones.control.DSLPIDControl",
             "DSLPIDControl",
         )
-        aviary = aviary_factory(
-            drone_model=drone_model,
-            num_drones=num_drones,
-            neighbourhood_radius=np.inf,
-            initial_xyzs=np.asarray(initial_positions, dtype=np.float64),
-            initial_rpys=np.zeros((num_drones, 3), dtype=np.float64),
-            physics=physics,
-            pyb_freq=config.physics_frequency_hz,
-            ctrl_freq=config.control_frequency_hz,
-            gui=config.gui,
-            record=config.record_video,
-            obstacles=False,
-            user_debug_gui=False,
-            output_folder="artifacts/recordings",
-        )
+        with warnings.catch_warnings():
+            # The pinned simulator constructs Gymnasium Box bounds as float64 before
+            # explicitly requesting float32. The audited cast is expected and harmless.
+            warnings.filterwarnings(
+                "ignore",
+                message=r".*Box (low|high)'s precision lowered by casting to float32.*",
+                module=r"gymnasium\.spaces\.box",
+            )
+            aviary = aviary_factory(
+                drone_model=drone_model,
+                num_drones=num_drones,
+                neighbourhood_radius=np.inf,
+                initial_xyzs=np.asarray(initial_positions, dtype=np.float64),
+                initial_rpys=np.zeros((num_drones, 3), dtype=np.float64),
+                physics=physics,
+                pyb_freq=config.physics_frequency_hz,
+                ctrl_freq=config.control_frequency_hz,
+                gui=config.gui,
+                record=config.record_video,
+                obstacles=False,
+                user_debug_gui=False,
+                output_folder="artifacts/recordings",
+            )
         self._aviary = cast(_Aviary, aviary)
         self._controllers = tuple(
             cast(_PIDController, controller_factory(drone_model=drone_model))

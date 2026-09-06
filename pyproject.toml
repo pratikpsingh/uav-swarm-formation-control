@@ -13,6 +13,9 @@ dependencies = [
 [project.optional-dependencies]
 dmpc = ["scipy>=1.16,<2"]
 simulation = ["gym-pybullet-drones"]
+deployment = [
+    "torchao>=0.17,<0.18",
+]
 
 [project.scripts]
 uav-swarm-control = "uav_swarm_control.cli:main"

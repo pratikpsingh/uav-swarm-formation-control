@@ -163,6 +163,25 @@ Run the complete bounded Stage 11 workflow:
       --output artifacts/communication/check \
       --project-root .
 
+Run the bounded Stage 12 compression workflow after creating a matching Stage 11 smoke teacher:
+
+```bash
+uv sync --extra deployment
+uv run --extra deployment uav-swarm-control run-deployment-study \
+  --task configs/experiment/stage11_plane_4uav.yaml \
+  --deployment configs/deployment/stage12_policy_compression.yaml \
+  --teacher-checkpoint artifacts/communication/<run>/smoke/<task>/<regimen>/seed-11/model.pt \
+  --teacher-result artifacts/communication/<run>/smoke/<task>/<regimen>/seed-11/result.json \
+  --smoke \
+  --output artifacts/deployment/check \
+  --project-root .
+```
+
+Smoke output validates plumbing only. A research run requires a full-budget teacher that passes the
+predeclared behavioral gates. Portable actor graphs and host measurements do not establish embedded
+feasibility; repeat flash, peak-RAM, latency, and energy measurements on the target. See
+[the compression protocol](docs/policy-compression.md).
+
 Run all local quality checks:
 
 ```bash
@@ -183,7 +202,7 @@ uv run ruff check --fix .
 
 ```text
 configs/                 Version-controlled experiment inputs
-deployment/              Future model export and device benchmarking
+deployment/              Model-export and target-benchmarking guidance
 docs/                    Architecture and engineering reference documentation
 reports/                 Reviewed, reproducible result summaries
 scripts/                 Thin executable helpers; reusable logic belongs in src/

@@ -8,6 +8,7 @@ from pytest import CaptureFixture, MonkeyPatch
 from uav_swarm_control.cli import main
 from uav_swarm_control.configuration import (
     CommunicationExperimentConfig,
+    DeploymentStudyConfig,
     GeneralizationConfig,
     ObstacleExperimentConfig,
 )
@@ -354,3 +355,53 @@ def test_cli_validates_and_runs_communication_smoke(
     assert project_root == root.resolve()
     assert resume
     assert "Communication study complete" in capsys.readouterr().err
+
+
+def test_cli_applies_bounded_deployment_smoke_profile(
+    tmp_path: Path, capsys: CaptureFixture[str], monkeypatch: MonkeyPatch
+) -> None:
+    """The deployment command must preserve candidates and label smoke as non-scientific."""
+    from uav_swarm_control.evaluation import deployment
+
+    calls: list[tuple[CommunicationExperimentConfig, DeploymentStudyConfig]] = []
+
+    def fake_run(
+        task: CommunicationExperimentConfig,
+        study: DeploymentStudyConfig,
+        checkpoint: Path,
+        teacher_result: Path,
+        output: Path,
+        *,
+        project_root: Path,
+    ) -> Path:
+        del checkpoint, teacher_result, project_root
+        calls.append((task, study))
+        return output / "summary.json"
+
+    monkeypatch.setattr(deployment, "run_deployment_study", fake_run)
+    root = Path(__file__).parents[1]
+    main(
+        [
+            "run-deployment-study",
+            "--task",
+            str(root / "configs/experiment/stage11_plane_4uav.yaml"),
+            "--deployment",
+            str(root / "configs/deployment/stage12_policy_compression.yaml"),
+            "--teacher-checkpoint",
+            str(tmp_path / "model.pt"),
+            "--teacher-result",
+            str(tmp_path / "result.json"),
+            "--output",
+            str(tmp_path / "deployment"),
+            "--project-root",
+            str(root),
+            "--smoke",
+        ]
+    )
+
+    assert len(calls) == 1
+    task, study = calls[0]
+    assert task.profile == study.profile == "smoke"
+    assert len(study.candidates) == 7
+    assert len(study.distillation_seeds) == 5
+    assert "Deployment study complete" in capsys.readouterr().err

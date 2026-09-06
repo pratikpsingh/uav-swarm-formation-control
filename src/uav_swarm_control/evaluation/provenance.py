@@ -61,6 +61,7 @@ def collect_provenance(project_root: Path) -> dict[str, object]:
         "python": platform.python_version(),
         "platform": platform.platform(),
         "torch": str(torch.__version__),
+        "torchao": _installed_version("torchao"),
         "numpy": _installed_version("numpy"),
         "pybullet": _installed_version("pybullet"),
         "scipy": _installed_version("scipy"),

@@ -1,0 +1,44 @@
+# Stage 12; use only after a full Stage 11 teacher passes these predeclared gates.
+schema_version: 1
+name: stage12-policy-compression
+teacher_gate:
+  - condition: k2-global-mixed
+    minimum_collision_free_success: 0.80
+    maximum_collision_any: 0.05
+    maximum_mean_normalized_shape_rmse: 0.15
+  - condition: kall-global-mixed
+    minimum_collision_free_success: 0.80
+    maximum_collision_any: 0.05
+    maximum_mean_normalized_shape_rmse: 0.15
+candidates:
+  # Width ablation: same masked-mean input structure and two policy layers.
+  - {name: ff-16, architecture: feed-forward, width: 16, depth: 2, structured_pruning_fraction: 0.0, quantization: none}
+  - {name: ff-32, architecture: feed-forward, width: 32, depth: 2, structured_pruning_fraction: 0.0, quantization: none}
+  - {name: ff-64, architecture: feed-forward, width: 64, depth: 2, structured_pruning_fraction: 0.0, quantization: none}
+  # Memory ablation: recurrent state is explicit and reset at episode boundaries.
+  - {name: gru-32, architecture: gru, width: 32, depth: 1, structured_pruning_fraction: 0.0, quantization: none}
+  - {name: lstm-32, architecture: lstm, width: 32, depth: 1, structured_pruning_fraction: 0.0, quantization: none}
+  # Structured masks expose whether zeros help; dense artifact size is still reported honestly.
+  - {name: ff-64-pruned-50, architecture: feed-forward, width: 64, depth: 2, structured_pruning_fraction: 0.5, quantization: none}
+  # TorchAO dynamic INT8 activations and per-channel INT8 weights.
+  - {name: ff-32-int8, architecture: feed-forward, width: 32, depth: 2, structured_pruning_fraction: 0.0, quantization: int8-dynamic}
+distillation:
+  dataset_episodes_per_condition: 20
+  validation_fraction: 0.2
+  epochs: 100
+  fine_tune_epochs: 20
+  batch_size: 64
+  learning_rate: 0.001
+benchmark:
+  warmup_iterations: 200
+  measured_iterations: 2000
+  torch_threads: 1
+energy:
+  status: unavailable
+  reason: target power analyzer is not yet connected; host timing is not an energy measurement
+  joules_per_inference: {}
+protocol:
+  distillation_seeds: [101, 202, 303, 404, 505]
+  dataset_seed: 20261201
+  evaluation_episodes_per_condition: 20
+  profile: research
