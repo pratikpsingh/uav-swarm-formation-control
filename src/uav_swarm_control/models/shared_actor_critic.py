@@ -10,6 +10,10 @@ from uav_swarm_control.models._distributions import (
     squashed_log_probability,
 )
 from uav_swarm_control.models._networks import build_mlp
+from uav_swarm_control.models.neighbor_encoder import (
+    MaskedMeanNeighborActor,
+    NeighborEncoderSpec,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +38,7 @@ class SharedActorCentralCritic(nn.Module):
         actor_hidden_sizes: tuple[int, ...],
         critic_hidden_sizes: tuple[int, ...],
         initial_log_standard_deviation: float,
+        neighbor_encoder: NeighborEncoderSpec | None = None,
     ) -> None:
         super().__init__()
         if min(local_observation_size, centralized_state_size, action_size, num_agents) < 1:
@@ -45,11 +50,21 @@ class SharedActorCentralCritic(nn.Module):
         self.actor_hidden_sizes = actor_hidden_sizes
         self.critic_hidden_sizes = critic_hidden_sizes
         self.initial_log_standard_deviation = initial_log_standard_deviation
-        self.actor = build_mlp(
-            local_observation_size,
-            action_size,
-            actor_hidden_sizes,
-            output_gain=0.01,
+        self.neighbor_encoder = neighbor_encoder
+        self.actor = (
+            build_mlp(
+                local_observation_size,
+                action_size,
+                actor_hidden_sizes,
+                output_gain=0.01,
+            )
+            if neighbor_encoder is None
+            else MaskedMeanNeighborActor(
+                local_observation_size,
+                action_size,
+                actor_hidden_sizes,
+                neighbor_encoder,
+            )
         )
         self.critic = build_mlp(
             centralized_state_size,

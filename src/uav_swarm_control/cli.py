@@ -22,6 +22,7 @@ from uav_swarm_control.algorithms.ppo import (
 )
 from uav_swarm_control.configuration import (
     ConfigurationError,
+    load_communication_experiment_config,
     load_dmpc_config,
     load_experiment_config,
     load_generalization_config,
@@ -173,6 +174,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="skip matching completed seeds; does not resume optimizer state",
     )
     obstacles.add_argument("--torch-threads", type=int, default=1)
+    communication = commands.add_parser(
+        "run-communication-study",
+        help="compare fixed and variable neighbor policies across topology conditions",
+    )
+    communication.add_argument("--config", type=Path, action="append", required=True)
+    communication.add_argument("--output", type=Path, default=Path("artifacts/communication"))
+    communication.add_argument("--project-root", type=Path, default=Path.cwd())
+    communication.add_argument(
+        "--smoke",
+        action="store_true",
+        help="retain every condition, regimen, and seed with a plumbing-only budget",
+    )
+    communication.add_argument(
+        "--resume",
+        action="store_true",
+        help="skip matching completed seeds; does not resume optimizer state",
+    )
+    communication.add_argument("--torch-threads", type=int, default=1)
     baseline_evaluate = commands.add_parser(
         "evaluate-baseline", help="evaluate a saved baseline actor on compatible held-out episodes"
     )
@@ -342,6 +361,37 @@ def main(argv: Sequence[str] | None = None) -> None:
                 LOGGER.info(
                     "Obstacle study complete: profile=%s summary=%s",
                     obstacle_config.profile,
+                    summary_path,
+                )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            parser.error(str(error))
+        finally:
+            torch.set_num_threads(previous_threads)
+        return
+    if args.command == "run-communication-study":
+        if args.torch_threads < 1:
+            parser.error("--torch-threads must be positive.")
+        previous_threads = torch.get_num_threads()
+        try:
+            torch.set_num_threads(args.torch_threads)
+            configurations = [load_communication_experiment_config(path) for path in args.config]
+            from uav_swarm_control.evaluation.communication import (
+                communication_smoke_config,
+                run_communication_study,
+            )
+
+            for communication_config in configurations:
+                if args.smoke:
+                    communication_config = communication_smoke_config(communication_config)
+                summary_path = run_communication_study(
+                    communication_config,
+                    args.output,
+                    project_root=args.project_root.resolve(),
+                    resume=args.resume,
+                )
+                LOGGER.info(
+                    "Communication study complete: profile=%s summary=%s",
+                    communication_config.profile,
                     summary_path,
                 )
         except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:

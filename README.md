@@ -24,6 +24,10 @@ complete; full-budget lab runs are required before making a generalization claim
 Stage 10 adds seeded oracle static and dynamic spherical obstacles, fixed-width masked actor/critic
 inputs, a none-to-static-to-dynamic curriculum, equal-budget controls, and matched multi-seed
 evaluation. The full smoke workflow is complete; obstacle-avoidance claims require lab training.
+Stage 11 adds a masked permutation-invariant neighbor encoder and a fixed-versus-variable topology
+study over planar/spatial formations, requested and actual degree, sensing range, dynamic obstacles,
+connectivity, rigidity, payload bytes, and across-policy confidence intervals. Scientific claims
+remain pending full-budget lab training.
 
 See [the formation geometry contract](docs/formations.md) and
 [the multi-agent contract](docs/multi-agent-contracts.md) for the foundational APIs. The
@@ -40,6 +44,8 @@ information access, comparison guard and remaining limitations. The
 coordinate frames, held-out evaluation, and the distinction between software and research gates.
 The [dynamic-obstacle protocol](docs/dynamic-obstacles.md) documents oracle information, motion and
 collision semantics, curriculum controls, safety metrics, artifacts, and current limitations.
+The [neighbor and communication protocol](docs/communication-study.md) defines set-invariant actor
+inputs, the factorial design, graph metrics, uncertainty, and the Paper 02 comparison boundary.
 
 ## Requirements
 
@@ -147,6 +153,15 @@ uv run uav-swarm-control run-obstacle-study \
   --output artifacts/obstacles/check \
   --project-root .
 ```
+
+Run the complete bounded Stage 11 workflow:
+
+    uv run uav-swarm-control run-communication-study \
+      --config configs/experiment/stage11_plane_4uav.yaml \
+      --config configs/experiment/stage11_pyramid_5uav.yaml \
+      --smoke \
+      --output artifacts/communication/check \
+      --project-root .
 
 Run all local quality checks:
 

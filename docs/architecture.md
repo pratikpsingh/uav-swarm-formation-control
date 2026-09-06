@@ -81,3 +81,9 @@ Stage 10 keeps kinematic sphere mathematics in `obstacles`, curriculum/protocol 
 paired comparisons in `evaluation`. Obstacle randomness has an independent stream. Fixed-width masks
 keep actor and critic architectures identical across no/static/dynamic cases. The Crazyflie dynamics
 remain physical, while obstacle bodies and perception are explicitly outside this first experiment.
+
+Stage 11 separates padded observation capacity from active communication topology. The actor's
+shared neighbor encoder and masked mean live in models; pure adjacency, connectivity, spectral,
+rigidity, and payload calculations live in communication; per-episode selection lives in the
+specialized environment; and fixed-versus-variable multi-seed inference lives in evaluation.
+Versioned checkpoints persist the structured encoder without breaking earlier flat actors.

@@ -66,3 +66,10 @@ the oracle sphere distribution, sensing and safety bounds, one fixed pose range 
 three equal-budget training regimens, all four matched evaluation scenarios, and five training
 seeds. `run-obstacle-study --smoke` reduces only runtime-related values. See
 [the dynamic-obstacle protocol](../docs/dynamic-obstacles.md).
+
+The two stage11 experiment files freeze the four-UAV plane and five-UAV pyramid communication
+studies. Each crosses requested neighbor count, finite/unlimited sensing, and clear/mixed-dynamic
+obstacles; defines fixed-two, fixed-all, and variable-topology training distributions; retains five
+independent training seeds; and fixes a 24-byte relative-state payload model. Use the
+run-communication-study command with its smoke option for bounded plumbing validation. See
+[the neighbor protocol](../docs/communication-study.md).

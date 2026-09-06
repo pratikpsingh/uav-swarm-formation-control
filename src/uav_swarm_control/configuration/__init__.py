@@ -1,5 +1,11 @@
 """Validated experiment configuration and loading."""
 
+from uav_swarm_control.configuration.communication import (
+    CommunicationExperimentConfig,
+    NeighborEncoderConfig,
+    communication_experiment_config_from_mapping,
+    load_communication_experiment_config,
+)
 from uav_swarm_control.configuration.dmpc import (
     DMPCConfig,
     DMPCLimits,
@@ -66,6 +72,7 @@ from uav_swarm_control.configuration.pybullet import (
 
 __all__ = [
     "AssignmentMode",
+    "CommunicationExperimentConfig",
     "ConfigurationError",
     "ContinuousBanditConfig",
     "CoordinateFrame",
@@ -82,6 +89,7 @@ __all__ = [
     "KinematicTaskConfig",
     "MAPPOConfig",
     "MAPPOExperimentConfig",
+    "NeighborEncoderConfig",
     "ObservationConfig",
     "ObstacleExperimentConfig",
     "ObstacleTrainingRegimen",
@@ -94,10 +102,12 @@ __all__ = [
     "PyBulletSimulatorConfig",
     "RewardConfig",
     "TrainingRole",
+    "communication_experiment_config_from_mapping",
     "dmpc_config_from_mapping",
     "experiment_config_from_mapping",
     "experiment_config_to_dict",
     "generalization_config_from_mapping",
+    "load_communication_experiment_config",
     "load_dmpc_config",
     "load_experiment_config",
     "load_generalization_config",

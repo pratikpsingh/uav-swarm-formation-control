@@ -1,15 +1,17 @@
 """Versioned checkpoint persistence for shared actor and centralized critic."""
 
 from collections.abc import Mapping
+from dataclasses import asdict
 from pathlib import Path
 from typing import cast
 
 import torch
 from torch import Tensor
 
-from uav_swarm_control.models import SharedActorCentralCritic
+from uav_swarm_control.models import NeighborEncoderSpec, SharedActorCentralCritic
 
-_FORMAT_VERSION = 1
+_FORMAT_VERSION = 2
+_SUPPORTED_FORMATS = {1, 2}
 
 
 def _string_mapping(value: object, *, name: str) -> dict[str, object]:
@@ -42,6 +44,28 @@ def _sizes(mapping: Mapping[str, object], key: str) -> tuple[int, ...]:
     return cast(tuple[int, ...], untyped)
 
 
+def _neighbor_encoder(value: object) -> NeighborEncoderSpec | None:
+    if value is None:
+        return None
+    specification = _string_mapping(value, name="neighbor_encoder")
+    expected = {
+        "ego_features",
+        "max_neighbors",
+        "neighbor_features",
+        "embedding_size",
+        "hidden_sizes",
+    }
+    if set(specification) != expected:
+        raise ValueError("checkpoint neighbor_encoder has invalid keys.")
+    return NeighborEncoderSpec(
+        ego_features=_integer(specification, "ego_features"),
+        max_neighbors=_integer(specification, "max_neighbors"),
+        neighbor_features=_integer(specification, "neighbor_features"),
+        embedding_size=_integer(specification, "embedding_size"),
+        hidden_sizes=_sizes(specification, "hidden_sizes"),
+    )
+
+
 def save_mappo_checkpoint(
     path: str | Path,
     model: SharedActorCentralCritic,
@@ -63,6 +87,9 @@ def save_mappo_checkpoint(
                 "actor_hidden_sizes": model.actor_hidden_sizes,
                 "critic_hidden_sizes": model.critic_hidden_sizes,
                 "initial_log_standard_deviation": model.initial_log_standard_deviation,
+                "neighbor_encoder": (
+                    asdict(model.neighbor_encoder) if model.neighbor_encoder is not None else None
+                ),
             },
             "state_dict": model.state_dict(),
             "metadata": dict(metadata or {}),
@@ -81,8 +108,11 @@ def load_mappo_checkpoint(
     """Validate and reconstruct a MAPPO model with the weights-only loader."""
     raw = torch.load(Path(path), map_location=device, weights_only=True)
     payload = _string_mapping(cast(object, raw), name="root")
-    if payload.get("format_version") != _FORMAT_VERSION:
-        raise ValueError(f"unsupported MAPPO checkpoint format; expected {_FORMAT_VERSION}.")
+    format_version = payload.get("format_version")
+    if format_version not in _SUPPORTED_FORMATS:
+        raise ValueError(
+            f"unsupported MAPPO checkpoint format; expected one of {sorted(_SUPPORTED_FORMATS)}."
+        )
     specification = _string_mapping(payload.get("model"), name="model specification")
     initial_log_standard_deviation = specification.get("initial_log_standard_deviation")
     if not isinstance(initial_log_standard_deviation, float):
@@ -95,6 +125,11 @@ def load_mappo_checkpoint(
         actor_hidden_sizes=_sizes(specification, "actor_hidden_sizes"),
         critic_hidden_sizes=_sizes(specification, "critic_hidden_sizes"),
         initial_log_standard_deviation=initial_log_standard_deviation,
+        neighbor_encoder=(
+            _neighbor_encoder(specification.get("neighbor_encoder"))
+            if format_version == 2
+            else None
+        ),
     ).to(device)
     state = _string_mapping(payload.get("state_dict"), name="state_dict")
     if not all(isinstance(value, Tensor) for value in state.values()):

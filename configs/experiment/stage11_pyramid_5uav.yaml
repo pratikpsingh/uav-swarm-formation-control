@@ -1,0 +1,130 @@
+# Stage 11 neighbor-topology study; --smoke validates plumbing only.
+schema_version: 1
+name: stage11-neighbors-pyramid-5uav
+seed: 11
+formation:
+  kind: pyramid
+  num_agents: 5
+  spacing_m: 0.6
+  center_m: [0.0, 0.0, 2.0]
+  euler_radians: [0.0, 0.0, 0.0]
+environment:
+  time_step_seconds: 0.03333333333333333
+  max_episode_steps: 360
+  max_velocity_component_mps: 0.5
+observation:
+  max_neighbors: 4
+  neighbor_radius_m: null
+task:
+  initial_center_m: [-1.4, 0.0, 1.6]
+  initial_position_noise_m: 0.05
+  success_tolerance_m: 0.12
+  success_hold_steps: 15
+  collision_distance_m: 0.2
+  terminate_on_collision: true
+reward:
+  navigation_weight: 10.0
+  formation_weight: 1.0
+  collision_penalty: 2.0
+  smoothness_weight: 0.0
+  success_bonus: 0.0
+controller:
+  gain_per_second: 1.5
+simulator:
+  drone_model: cf2x
+  physics: pyb_gnd_drag_dw
+  physics_frequency_hz: 240
+  control_frequency_hz: 30
+  gui: false
+  record_video: false
+algorithm:
+  total_steps: 10000000
+  rollout_steps: 1000
+  num_environments: 20
+  update_epochs: 4
+  minibatch_size: 250
+  learning_rate: 0.0005
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_coefficient: 0.2
+  value_coefficient: 0.5
+  entropy_coefficient: 0.001
+  max_gradient_norm: 0.5
+  hidden_sizes: [256, 256]
+  critic_hidden_sizes: [256, 256]
+  initial_log_standard_deviation: -0.5
+  device: auto
+evaluation:
+  episodes: 20
+communication_study:
+  pose:
+    center_offset_lower_m: [-0.1, -0.1, -0.1]
+    center_offset_upper_m: [0.1, 0.1, 0.1]
+    euler_offset_lower_radians: [-0.2, -0.2, -0.3]
+    euler_offset_upper_radians: [0.2, 0.2, 0.3]
+    scale_lower: 0.95
+    scale_upper: 1.05
+  variant:
+    name: minimum-target
+    assignment: minimum-distance
+    coordinate_frame: target
+  field:
+    max_obstacles: 3
+    static_count: 2
+    slow_dynamic_count: 2
+    mixed_count: 3
+    vehicle_radius_m: 0.06
+    radius_lower_m: 0.12
+    radius_upper_m: 0.18
+    speed_lower_mps: 0.12
+    speed_upper_mps: 0.2
+    route_fraction_lower: 0.3
+    route_fraction_upper: 0.7
+    static_lateral_lower_m: 0.0
+    static_lateral_upper_m: 0.4
+    dynamic_lateral_lower_m: 0.4
+    dynamic_lateral_upper_m: 0.65
+    vertical_offset_lower_m: -0.15
+    vertical_offset_upper_m: 0.15
+    mixed_dynamic_probability: 0.67
+    observation_radius_m: null
+    safety_margin_m: 0.2
+    proximity_weight: 0.5
+    collision_penalty: 5.0
+  encoder:
+    embedding_size: 32
+    hidden_sizes: [64]
+    # Relative position + velocity = six float32 values.
+    payload_bytes_per_neighbor: 24
+  evaluation_conditions:
+    - {name: k0-local-clear, requested_neighbors: 0, sensing_radius_m: 1.0, obstacle_scenario: no-obstacle}
+    - {name: k0-local-mixed, requested_neighbors: 0, sensing_radius_m: 1.0, obstacle_scenario: mixed-dynamic}
+    - {name: k0-global-clear, requested_neighbors: 0, sensing_radius_m: null, obstacle_scenario: no-obstacle}
+    - {name: k0-global-mixed, requested_neighbors: 0, sensing_radius_m: null, obstacle_scenario: mixed-dynamic}
+    - {name: k1-local-clear, requested_neighbors: 1, sensing_radius_m: 1.0, obstacle_scenario: no-obstacle}
+    - {name: k1-local-mixed, requested_neighbors: 1, sensing_radius_m: 1.0, obstacle_scenario: mixed-dynamic}
+    - {name: k1-global-clear, requested_neighbors: 1, sensing_radius_m: null, obstacle_scenario: no-obstacle}
+    - {name: k1-global-mixed, requested_neighbors: 1, sensing_radius_m: null, obstacle_scenario: mixed-dynamic}
+    - {name: k2-local-clear, requested_neighbors: 2, sensing_radius_m: 1.0, obstacle_scenario: no-obstacle}
+    - {name: k2-local-mixed, requested_neighbors: 2, sensing_radius_m: 1.0, obstacle_scenario: mixed-dynamic}
+    - {name: k2-global-clear, requested_neighbors: 2, sensing_radius_m: null, obstacle_scenario: no-obstacle}
+    - {name: k2-global-mixed, requested_neighbors: 2, sensing_radius_m: null, obstacle_scenario: mixed-dynamic}
+    - {name: kall-local-clear, requested_neighbors: 4, sensing_radius_m: 1.0, obstacle_scenario: no-obstacle}
+    - {name: kall-local-mixed, requested_neighbors: 4, sensing_radius_m: 1.0, obstacle_scenario: mixed-dynamic}
+    - {name: kall-global-clear, requested_neighbors: 4, sensing_radius_m: null, obstacle_scenario: no-obstacle}
+    - {name: kall-global-mixed, requested_neighbors: 4, sensing_radius_m: null, obstacle_scenario: mixed-dynamic}
+  training_regimens:
+    - {name: fixed-two, kind: fixed, conditions: [k2-global-mixed]}
+    - {name: fixed-all, kind: fixed, conditions: [kall-global-mixed]}
+    - name: variable-topology
+      kind: variable
+      conditions:
+        [k0-local-clear, k0-local-mixed, k0-global-clear, k0-global-mixed,
+         k1-local-clear, k1-local-mixed, k1-global-clear, k1-global-mixed,
+         k2-local-clear, k2-local-mixed, k2-global-clear, k2-global-mixed,
+         kall-local-clear, kall-local-mixed, kall-global-clear, kall-global-mixed]
+protocol:
+  training_seeds: [11, 22, 33, 44, 55]
+  evaluation_seed: 20260911
+  profile: research
+

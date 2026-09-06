@@ -11,7 +11,7 @@ from uav_swarm_control.algorithms.mappo.buffer import FlatMAPPOBatch, MAPPORollo
 from uav_swarm_control.algorithms.ppo import ppo_loss, resolve_device, seed_torch
 from uav_swarm_control.configuration import MAPPOConfig
 from uav_swarm_control.environments import MultiAgentEnvironment, NormalizedVelocityActions
-from uav_swarm_control.models import SharedActorCentralCritic
+from uav_swarm_control.models import NeighborEncoderSpec, SharedActorCentralCritic
 from uav_swarm_control.observations import (
     CentralizedState,
     LocalObservations,
@@ -227,6 +227,7 @@ def train_mappo(
     config: MAPPOConfig,
     *,
     seed: int,
+    neighbor_encoder: NeighborEncoderSpec | None = None,
     on_update: Callable[[SharedActorCentralCritic, MAPPOUpdateMetrics], None] | None = None,
 ) -> MAPPOTrainingResult:
     """Train MAPPO with shared actors and parallel independent environments."""
@@ -255,6 +256,7 @@ def train_mappo(
             actor_hidden_sizes=config.ppo.hidden_sizes,
             critic_hidden_sizes=config.critic_hidden_sizes,
             initial_log_standard_deviation=config.ppo.initial_log_standard_deviation,
+            neighbor_encoder=neighbor_encoder,
         ).to(device)
         optimizer = torch.optim.Adam(
             model.parameters(),

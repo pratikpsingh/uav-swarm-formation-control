@@ -219,8 +219,10 @@ def _vector(value: object, *, path: str) -> Vector3:
     return cast(Vector3, tuple(_number(item, path=f"{path}[{i}]") for i, item in enumerate(items)))
 
 
-def _pose(value: object) -> FormationPoseRange:
-    path = "obstacle_study.pose"
+def formation_pose_range_from_mapping(
+    value: object, *, path: str = "obstacle_study.pose"
+) -> FormationPoseRange:
+    """Parse a validated formation pose range for obstacle-aware studies."""
     values = _mapping(value, path=path)
     required = {
         "center_offset_lower_m",
@@ -248,8 +250,10 @@ def _pose(value: object) -> FormationPoseRange:
         raise ConfigurationError(f"{path}: {error}") from error
 
 
-def _field(value: object) -> ObstacleFieldConfig:
-    path = "obstacle_study.field"
+def obstacle_field_config_from_mapping(
+    value: object, *, path: str = "obstacle_study.field"
+) -> ObstacleFieldConfig:
+    """Parse a validated spherical-obstacle field."""
     values = _mapping(value, path=path)
     names = set(ObstacleFieldConfig.__dataclass_fields__)
     _keys(values, path=path, required=names)
@@ -389,9 +393,9 @@ def obstacle_experiment_config_from_mapping(value: object) -> ObstacleExperiment
     return ObstacleExperimentConfig(
         mappo_experiment_config_from_mapping(mappo_values),
         pybullet_experiment_config_from_mapping(physics_values),
-        _pose(study["pose"]),
+        formation_pose_range_from_mapping(study["pose"]),
         variant,
-        _field(study["field"]),
+        obstacle_field_config_from_mapping(study["field"]),
         tuple(_regimen(item, index=i) for i, item in enumerate(regimen_values)),
         scenarios,
         tuple(cast(list[int], raw_seeds)),
@@ -417,7 +421,9 @@ __all__ = [
     "ObstacleExperimentConfig",
     "ObstacleTrainingRegimen",
     "TrainingRole",
+    "formation_pose_range_from_mapping",
     "load_obstacle_experiment_config",
     "obstacle_experiment_config_from_mapping",
+    "obstacle_field_config_from_mapping",
     "scenario_for_progress",
 ]

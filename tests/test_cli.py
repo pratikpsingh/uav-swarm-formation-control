@@ -6,7 +6,11 @@ import pytest
 from pytest import CaptureFixture, MonkeyPatch
 
 from uav_swarm_control.cli import main
-from uav_swarm_control.configuration import GeneralizationConfig, ObstacleExperimentConfig
+from uav_swarm_control.configuration import (
+    CommunicationExperimentConfig,
+    GeneralizationConfig,
+    ObstacleExperimentConfig,
+)
 
 
 def _write_small_ppo_config(path: Path) -> None:
@@ -302,3 +306,51 @@ def test_cli_validates_and_runs_obstacle_smoke(
     assert project_root == root.resolve()
     assert resume
     assert "Obstacle study complete" in capsys.readouterr().err
+
+
+def test_cli_validates_and_runs_communication_smoke(
+    tmp_path: Path,
+    capsys: CaptureFixture[str],
+    monkeypatch: MonkeyPatch,
+) -> None:
+    from uav_swarm_control.evaluation import communication
+
+    calls: list[tuple[CommunicationExperimentConfig, Path, Path, bool]] = []
+
+    def fake_run(
+        config: CommunicationExperimentConfig,
+        output: Path,
+        *,
+        project_root: Path,
+        resume: bool = False,
+    ) -> Path:
+        calls.append((config, output, project_root, resume))
+        return output / "summary.json"
+
+    monkeypatch.setattr(communication, "run_communication_study", fake_run)
+    root = Path(__file__).parents[1]
+    output = tmp_path / "communication"
+    main(
+        [
+            "run-communication-study",
+            "--config",
+            str(root / "configs/experiment/stage11_plane_4uav.yaml"),
+            "--smoke",
+            "--resume",
+            "--output",
+            str(output),
+            "--project-root",
+            str(root),
+        ]
+    )
+
+    assert len(calls) == 1
+    config, called_output, project_root, resume = calls[0]
+    assert config.profile == "smoke"
+    assert config.mappo.algorithm.ppo.total_steps == 256
+    assert len(config.training_regimens) == 3
+    assert len(config.evaluation_conditions) == 16
+    assert called_output == output
+    assert project_root == root.resolve()
+    assert resume
+    assert "Communication study complete" in capsys.readouterr().err

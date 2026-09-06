@@ -15,6 +15,7 @@ class RandomStream(IntEnum):
     EVALUATION = 4
     FORMATION_POSE = 5
     OBSTACLES = 6
+    COMMUNICATION = 7
 
 
 def validate_seed(value: object) -> int:

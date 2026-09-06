@@ -102,6 +102,12 @@ def evaluate_benchmark(
             reports_action_frame_clip = False
             formation_error = 0.0
             episode_return = 0.0
+            communication_steps = 0
+            communication_sums: dict[str, float] = {}
+            minimum_actual_degree = math.inf
+            minimum_algebraic_connectivity = math.inf
+            maximum_connected_components = 0.0
+            received_payload_bytes = 0.0
             for step in range(1, horizon + 1):
                 actions = (
                     controller.act_with_state(observations, centralized_state)
@@ -134,6 +140,33 @@ def evaluate_benchmark(
                     reports_action_frame_clip = True
                 formation_error += metrics["normalized_shape_rmse"]
                 episode_return += float(transition.rewards.mean())
+                if "communication/actual_degree_mean" in metrics:
+                    communication_steps += 1
+                    for name in (
+                        "actual_degree_mean",
+                        "actual_degree_max",
+                        "reciprocal_edge_fraction",
+                        "connected",
+                        "algebraic_connectivity",
+                        "rigidity_rank_fraction",
+                        "infinitesimally_rigid",
+                    ):
+                        communication_sums[name] = (
+                            communication_sums.get(name, 0.0) + metrics[f"communication/{name}"]
+                        )
+                    minimum_actual_degree = min(
+                        minimum_actual_degree,
+                        metrics["communication/actual_degree_min"],
+                    )
+                    minimum_algebraic_connectivity = min(
+                        minimum_algebraic_connectivity,
+                        metrics["communication/algebraic_connectivity"],
+                    )
+                    maximum_connected_components = max(
+                        maximum_connected_components,
+                        metrics["communication/connected_components"],
+                    )
+                    received_payload_bytes += metrics["communication/received_payload_bytes"]
                 observations = transition.observations
                 centralized_state = transition.centralized_state
                 if transition.episode_done:
@@ -171,6 +204,47 @@ def evaluate_benchmark(
                         record["obstacle_collision_pair_steps"] = obstacle_collision_pair_steps
                     if obstacle_clearance is not None:
                         record["minimum_obstacle_clearance_m"] = obstacle_clearance
+                    if communication_steps:
+                        record.update(
+                            {
+                                "mean_actual_neighbor_degree": (
+                                    communication_sums["actual_degree_mean"] / communication_steps
+                                ),
+                                "minimum_actual_neighbor_degree": minimum_actual_degree,
+                                "mean_maximum_actual_neighbor_degree": (
+                                    communication_sums["actual_degree_max"] / communication_steps
+                                ),
+                                "mean_reciprocal_edge_fraction": (
+                                    communication_sums["reciprocal_edge_fraction"]
+                                    / communication_steps
+                                ),
+                                "connected_step_fraction": (
+                                    communication_sums["connected"] / communication_steps
+                                ),
+                                "maximum_connected_components": maximum_connected_components,
+                                "mean_algebraic_connectivity": (
+                                    communication_sums["algebraic_connectivity"]
+                                    / communication_steps
+                                ),
+                                "minimum_algebraic_connectivity": (minimum_algebraic_connectivity),
+                                "mean_rigidity_rank_fraction": (
+                                    communication_sums["rigidity_rank_fraction"]
+                                    / communication_steps
+                                ),
+                                "rigid_step_fraction": (
+                                    communication_sums["infinitesimally_rigid"]
+                                    / communication_steps
+                                ),
+                                "received_payload_bytes": received_payload_bytes,
+                                "mean_received_payload_bytes_per_step": (
+                                    received_payload_bytes / communication_steps
+                                ),
+                                "mean_received_payload_bytes_per_agent_step": (
+                                    received_payload_bytes
+                                    / (communication_steps * len(environment.agent_ids))
+                                ),
+                            }
+                        )
                     for name, value in metadata.items():
                         key = f"{episode_metadata_prefix}/{name}"
                         if key in record:

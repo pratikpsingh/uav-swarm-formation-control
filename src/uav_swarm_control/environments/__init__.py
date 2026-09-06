@@ -1,5 +1,6 @@
 """Multi-agent environment interfaces and simulator adapters."""
 
+from uav_swarm_control.environments.communication import CommunicationFormationEnvironment
 from uav_swarm_control.environments.continuous_bandit import ContinuousTargetBandit
 from uav_swarm_control.environments.contracts import (
     MultiAgentEnvironment,
@@ -16,6 +17,7 @@ from uav_swarm_control.environments.single_agent import (
 )
 
 __all__ = [
+    "CommunicationFormationEnvironment",
     "ContinuousTargetBandit",
     "GeneralizedFormationEnvironment",
     "MultiAgentEnvironment",
