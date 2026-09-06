@@ -44,3 +44,10 @@ The `paper04_3uav.yaml`, `paper04_4uav.yaml`, and `paper04_5uav.yaml` experiment
 MAPPO and PyBullet schemas with a strict `protocol` section containing five independent training
 seeds, an evaluation seed, and a profile label. Use `run-baseline --smoke` for a bounded local
 check; the unmodified research budgets are large. See [the baseline protocol](../docs/paper04-baseline.md).
+
+The classical controller is configured independently in
+[algorithm/dmpc_native.yaml](algorithm/dmpc_native.yaml). It exposes every horizon, planning-rate,
+cost, physical-limit and solver-tolerance choice and rejects missing or unknown keys. `run-dmpc`
+composes that controller configuration with one or more Paper 04 task files at runtime. This keeps
+the environment protocol identical while preventing controller settings from being duplicated in
+each 3/4/5-UAV task. See [the DMPC protocol](../docs/dmpc-baseline.md).

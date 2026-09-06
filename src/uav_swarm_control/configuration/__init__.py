@@ -1,5 +1,13 @@
 """Validated experiment configuration and loading."""
 
+from uav_swarm_control.configuration.dmpc import (
+    DMPCConfig,
+    DMPCLimits,
+    DMPCSolverConfig,
+    DMPCWeights,
+    dmpc_config_from_mapping,
+    load_dmpc_config,
+)
 from uav_swarm_control.configuration.loading import (
     experiment_config_from_mapping,
     load_experiment_config,
@@ -42,6 +50,10 @@ from uav_swarm_control.configuration.pybullet import (
 __all__ = [
     "ConfigurationError",
     "ContinuousBanditConfig",
+    "DMPCConfig",
+    "DMPCLimits",
+    "DMPCSolverConfig",
+    "DMPCWeights",
     "EnvironmentConfig",
     "ExperimentConfig",
     "FormationConfig",
@@ -57,8 +69,10 @@ __all__ = [
     "PyBulletPhysics",
     "PyBulletSimulatorConfig",
     "RewardConfig",
+    "dmpc_config_from_mapping",
     "experiment_config_from_mapping",
     "experiment_config_to_dict",
+    "load_dmpc_config",
     "load_experiment_config",
     "load_mappo_experiment_config",
     "load_ppo_experiment_config",

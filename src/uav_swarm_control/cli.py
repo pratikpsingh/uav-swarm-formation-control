@@ -22,6 +22,7 @@ from uav_swarm_control.algorithms.ppo import (
 )
 from uav_swarm_control.configuration import (
     ConfigurationError,
+    load_dmpc_config,
     load_experiment_config,
     load_mappo_experiment_config,
     load_ppo_experiment_config,
@@ -38,6 +39,7 @@ from uav_swarm_control.evaluation.baseline import (
     run_baseline,
     smoke_config,
 )
+from uav_swarm_control.evaluation.comparison import compare_controller_results
 from uav_swarm_control.evaluation.rollout import run_episode
 from uav_swarm_control.logging import LogLevel, configure_logging
 from uav_swarm_control.seeding import RandomStream, derive_seed
@@ -141,6 +143,26 @@ def build_parser() -> argparse.ArgumentParser:
     baseline_evaluate.add_argument("--output", type=Path, required=True)
     baseline_evaluate.add_argument("--project-root", type=Path, default=Path.cwd())
     baseline_evaluate.add_argument("--smoke", action="store_true")
+    dmpc = commands.add_parser(
+        "run-dmpc",
+        help="evaluate the classical DMPC adaptation on one or more Paper 04 tasks",
+    )
+    dmpc.add_argument("--task", type=Path, action="append", required=True)
+    dmpc.add_argument("--controller", type=Path, required=True)
+    dmpc.add_argument("--output", type=Path, default=Path("artifacts/baselines"))
+    dmpc.add_argument("--project-root", type=Path, default=Path.cwd())
+    dmpc.add_argument(
+        "--smoke",
+        action="store_true",
+        help="use the same two-episode, 48-step profile as the MAPPO smoke run",
+    )
+    compare = commands.add_parser(
+        "compare-controllers",
+        help="compare compatible MAPPO and DMPC artifacts using common metrics",
+    )
+    compare.add_argument("--mappo-summary", type=Path, required=True)
+    compare.add_argument("--dmpc-result", type=Path, required=True)
+    compare.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -149,6 +171,41 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
     configure_logging(LogLevel(args.log_level))
+    if args.command == "compare-controllers":
+        try:
+            path = compare_controller_results(
+                args.mappo_summary,
+                args.dmpc_result,
+                args.output,
+            )
+        except (OSError, RuntimeError, ValueError) as error:
+            parser.error(str(error))
+        LOGGER.info("Controller comparison complete: %s", path)
+        return
+    if args.command == "run-dmpc":
+        try:
+            # Keep SciPy optional for users who do not invoke the DMPC command.
+            from uav_swarm_control.evaluation.dmpc import dmpc_smoke_config, run_dmpc
+
+            controller_config = load_dmpc_config(args.controller)
+            tasks = [load_baseline_config(path) for path in args.task]
+            for task in tasks:
+                if args.smoke:
+                    task = dmpc_smoke_config(task)
+                result_path = run_dmpc(
+                    task,
+                    controller_config,
+                    args.output,
+                    project_root=args.project_root.resolve(),
+                )
+                LOGGER.info(
+                    "DMPC evaluation complete: profile=%s result=%s",
+                    task.profile,
+                    result_path,
+                )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            parser.error(str(error))
+        return
     if args.command == "evaluate-baseline":
         try:
             baseline_config = load_baseline_config(args.config)

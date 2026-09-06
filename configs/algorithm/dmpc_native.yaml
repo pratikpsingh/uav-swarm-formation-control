@@ -1,0 +1,19 @@
+# Clean-room adaptation of the native DMPC-Swarm QP, not the learned DAMPC surrogate.
+schema_version: 1
+name: dmpc-swarm-reference
+prediction_horizon_steps: 15
+planning_interval_seconds: 0.2
+weights:
+  terminal_position: 1.0
+  velocity: 0.0001
+  acceleration: 0.005
+  jerk: 0.001
+limits:
+  acceleration_mps2: 5.0
+  jerk_mps3: 5.0
+  minimum_separation_m: 0.4
+  downwash_scaling: 4.0
+solver:
+  max_iterations: 100
+  function_tolerance: 1.0e-8
+  constraint_tolerance: 1.0e-6

@@ -8,7 +8,11 @@ from typing import Protocol
 import numpy as np
 import torch
 
-from uav_swarm_control.controllers.contracts import Controller
+from uav_swarm_control.controllers.contracts import (
+    Controller,
+    EpisodeResettableController,
+    StateAwareController,
+)
 from uav_swarm_control.environments.contracts import (
     MultiAgentEnvironment,
     NormalizedVelocityActions,
@@ -45,13 +49,14 @@ class ActorController:
 
 def evaluate_benchmark(
     factory: Callable[[], PositionedEnvironment],
-    controller: Controller,
+    controller: Controller | StateAwareController,
     *,
     episodes: int,
     seed: int,
     horizon: int,
     time_step_seconds: float,
     collision_distance_m: float,
+    on_episode_complete: Callable[[Mapping[str, float]], None] | None = None,
 ) -> list[dict[str, float]]:
     """Measure whole trajectories, including initial separation and terminal states.
 
@@ -66,8 +71,12 @@ def evaluate_benchmark(
     environment = factory()
     try:
         for episode in range(episodes):
+            if isinstance(controller, EpisodeResettableController):
+                controller.reset()
             episode_seed = derive_indexed_seed(seed, RandomStream.EVALUATION, episode)
-            observations = environment.reset(seed=episode_seed).observations
+            reset = environment.reset(seed=episode_seed)
+            observations = reset.observations
+            centralized_state = reset.centralized_state
             previous = environment.positions
             rows, columns = np.triu_indices(len(previous), k=1)
             if len(rows) == 0:
@@ -81,7 +90,12 @@ def evaluate_benchmark(
             formation_error = 0.0
             episode_return = 0.0
             for step in range(1, horizon + 1):
-                transition = environment.step(controller.act(observations))
+                actions = (
+                    controller.act_with_state(observations, centralized_state)
+                    if isinstance(controller, StateAwareController)
+                    else controller.act(observations)
+                )
+                transition = environment.step(actions)
                 current = environment.positions
                 path_length += float(np.linalg.norm(current - previous, axis=1).mean())
                 previous = current
@@ -93,29 +107,31 @@ def evaluate_benchmark(
                 formation_error += metrics["normalized_shape_rmse"]
                 episode_return += float(transition.rewards.mean())
                 observations = transition.observations
+                centralized_state = transition.centralized_state
                 if transition.episode_done:
-                    results.append(
-                        {
-                            "episode_seed": episode_seed,
-                            "success": metrics["success"],
-                            "collision_free_success": float(
-                                metrics["success"] > 0 and not collision_any
-                            ),
-                            "collision_any": float(collision_any),
-                            "collision_pair_steps": collision_pair_steps,
-                            "minimum_clearance_m": separation - collision_distance_m,
-                            "mean_agent_path_length_m": path_length,
-                            "control_delta_rms": math.sqrt(squared_delta / step),
-                            "mean_normalized_shape_rmse": formation_error / step,
-                            "final_normalized_shape_rmse": metrics["normalized_shape_rmse"],
-                            "final_position_rmse_m": metrics["position_rmse_m"],
-                            "steps": float(step),
-                            "simulated_seconds": step * time_step_seconds,
-                            "mean_agent_return": episode_return,
-                            "terminated": float(transition.terminated),
-                            "truncated": float(transition.truncated),
-                        }
-                    )
+                    record = {
+                        "episode_seed": episode_seed,
+                        "success": metrics["success"],
+                        "collision_free_success": float(
+                            metrics["success"] > 0 and not collision_any
+                        ),
+                        "collision_any": float(collision_any),
+                        "collision_pair_steps": collision_pair_steps,
+                        "minimum_clearance_m": separation - collision_distance_m,
+                        "mean_agent_path_length_m": path_length,
+                        "control_delta_rms": math.sqrt(squared_delta / step),
+                        "mean_normalized_shape_rmse": formation_error / step,
+                        "final_normalized_shape_rmse": metrics["normalized_shape_rmse"],
+                        "final_position_rmse_m": metrics["position_rmse_m"],
+                        "steps": float(step),
+                        "simulated_seconds": step * time_step_seconds,
+                        "mean_agent_return": episode_return,
+                        "terminated": float(transition.terminated),
+                        "truncated": float(transition.truncated),
+                    }
+                    results.append(record)
+                    if on_episode_complete is not None:
+                        on_episode_complete(record)
                     break
             else:
                 raise RuntimeError("benchmark environment exceeded its configured horizon.")
@@ -134,15 +150,19 @@ def average_episodes(episodes: Sequence[Mapping[str, float]]) -> dict[str, float
     return {key: mean(item[key] for item in episodes) for key in sorted(keys)}
 
 
-def summarize_seeds(records: Sequence[Mapping[str, float]]) -> dict[str, object]:
-    """Report sample standard deviation across independent training seeds, not episodes."""
+def summarize_records(
+    records: Sequence[Mapping[str, float]], *, count_key: str
+) -> dict[str, object]:
+    """Summarize homogeneous records while making their sampling-unit count explicit."""
     if len(records) < 2:
-        raise ValueError("at least two independent seed records are required.")
+        raise ValueError("at least two records are required.")
+    if not count_key or not count_key.isidentifier():
+        raise ValueError("count_key must be a non-empty identifier.")
     keys = set(records[0])
     if any(set(record) != keys for record in records):
-        raise ValueError("all seeds must report identical metric keys.")
+        raise ValueError("all records must report identical metric keys.")
     return {
-        "seed_count": len(records),
+        count_key: len(records),
         "metrics": {
             key: {
                 "mean": mean(row[key] for row in records),
@@ -151,3 +171,8 @@ def summarize_seeds(records: Sequence[Mapping[str, float]]) -> dict[str, object]
             for key in sorted(keys)
         },
     }
+
+
+def summarize_seeds(records: Sequence[Mapping[str, float]]) -> dict[str, object]:
+    """Report variation across independently trained seed records."""
+    return summarize_records(records, count_key="seed_count")

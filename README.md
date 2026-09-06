@@ -14,6 +14,9 @@ formation task with Crazyflie rigid-body physics and an explicit velocity-to-PID
 The corrected Paper 04 baseline now provides multi-seed physical MAPPO training, checkpoint
 evaluation, trajectory metrics, and reproducible result records for three, four, and five UAVs.
 It is a feed-forward baseline; full-budget scientific validation remains pending lab experiments.
+A clean-room classical DMPC adaptation now uses the same physical tasks, held-out episode seeds and
+metrics. Guarded comparison artifacts reject incompatible environment/evaluation protocols and keep
+DMPC optimization diagnostics separate from task performance.
 
 See [the formation geometry contract](docs/formations.md) and
 [the multi-agent contract](docs/multi-agent-contracts.md) for the foundational APIs. The
@@ -23,7 +26,9 @@ reference task. The [MAPPO foundation](docs/mappo.md) explains parameter sharing
 training, and the explicit time/environment/agent batch axes. The
 [PyBullet adapter](docs/pybullet.md) documents simulator timing, reset behavior, and provenance.
 See the [Paper 04 baseline protocol](docs/paper04-baseline.md) for source deviations, budget
-definitions, local smoke commands, lab commands, and generated artifacts.
+definitions, local smoke commands, lab commands, and generated artifacts. The
+[classical DMPC protocol](docs/dmpc-baseline.md) documents its model, native-repository deviations,
+information access, comparison guard and remaining limitations.
 
 ## Requirements
 
@@ -41,6 +46,12 @@ development test group exercises the adapter. A runtime-only simulator installat
 
 ```bash
 uv sync --no-dev --extra simulation
+```
+
+The classical DMPC command additionally requires SciPy:
+
+```bash
+uv sync --no-dev --extra simulation --extra dmpc
 ```
 
 Run the project smoke-test command:
@@ -88,6 +99,19 @@ uv run uav-swarm-control train-mappo \
 uv run uav-swarm-control evaluate-mappo \
   --config configs/experiment/mappo_triangle_kinematic.yaml \
   --checkpoint artifacts/checkpoints/mappo_triangle_kinematic.pt
+```
+
+Run the classical DMPC adaptation on the same bounded three-, four-, and five-UAV smoke protocol:
+
+```bash
+uv run uav-swarm-control run-dmpc \
+  --task configs/experiment/paper04_3uav.yaml \
+  --task configs/experiment/paper04_4uav.yaml \
+  --task configs/experiment/paper04_5uav.yaml \
+  --controller configs/algorithm/dmpc_native.yaml \
+  --smoke \
+  --output artifacts/baselines/dmpc-check \
+  --project-root .
 ```
 
 Run all local quality checks:

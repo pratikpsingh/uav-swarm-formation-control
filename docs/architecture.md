@@ -54,3 +54,15 @@ shaping with progress reward in its own environment, and evaluates complete traj
 controller protocol. Training has an optional update callback for progress records and diagnostic
 checkpoints. The experiment runner owns source/runtime provenance, completed-seed validation, and
 aggregation across independent training seeds. Scientific validation is separate from smoke tests.
+
+Stage 8 adds optional `StateAwareController` and `EpisodeResettableController` capabilities without
+weakening the original local-observation `Controller` protocol. The common evaluator performs
+structural dispatch: learned actors continue to receive only local observations, while model-based
+controllers can explicitly request centralized state. This information difference is recorded in
+the result rather than hidden in the environment.
+
+The clean-room DMPC adapter keeps trajectory mathematics in `controllers`, strict controller
+choices in `configuration`, and experiment orchestration in `evaluation`. Both MAPPO and DMPC use a
+shared provenance module and a hashed comparison protocol. The hash covers environment physics,
+evaluation schedule, horizon and metric schema; result comparison fails closed when hashes differ.
+Controller-specific solver diagnostics remain outside common task metrics.

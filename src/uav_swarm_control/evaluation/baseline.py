@@ -3,16 +3,10 @@
 import hashlib
 import json
 import logging
-import platform
-import subprocess
 from dataclasses import asdict, replace
-from importlib.metadata import version
 from pathlib import Path
 from time import perf_counter
 from typing import cast
-from zipfile import ZIP_DEFLATED, ZipFile
-
-import torch
 
 from uav_swarm_control.algorithms.mappo import (
     load_mappo_checkpoint,
@@ -30,6 +24,12 @@ from uav_swarm_control.evaluation.benchmark import (
     average_episodes,
     evaluate_benchmark,
     summarize_seeds,
+)
+from uav_swarm_control.evaluation.comparison import comparison_protocol
+from uav_swarm_control.evaluation.provenance import (
+    collect_provenance,
+    stable_digest,
+    write_source_snapshot,
 )
 from uav_swarm_control.models import SharedActorCentralCritic
 
@@ -63,39 +63,6 @@ def smoke_config(config: BaselineConfig) -> BaselineConfig:
     )
 
 
-def _digest(value: object) -> str:
-    return hashlib.sha256(json.dumps(value, sort_keys=True, allow_nan=False).encode()).hexdigest()
-
-
-def _source_files(root: Path) -> list[Path]:
-    return [*sorted((root / "src").rglob("*.py")), root / "pyproject.toml", root / "uv.lock"]
-
-
-def _provenance(root: Path) -> dict[str, object]:
-    hashes = {
-        str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
-        for path in _source_files(root)
-    }
-    revision = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=True
-    ).stdout.strip()
-    dirty = subprocess.run(
-        ["git", "status", "--porcelain"], cwd=root, text=True, capture_output=True, check=True
-    ).stdout.strip()
-    return {
-        "git_revision": revision,
-        "git_dirty": bool(dirty),
-        "source_files_sha256": hashes,
-        "source_sha256": _digest(hashes),
-        "python": platform.python_version(),
-        "platform": platform.platform(),
-        "torch": str(torch.__version__),
-        "numpy": version("numpy"),
-        "pybullet": version("pybullet"),
-        "torch_threads": torch.get_num_threads(),
-    }
-
-
 def run_baseline(
     config: BaselineConfig,
     output: Path,
@@ -116,11 +83,12 @@ def run_baseline(
         "method": "corrected-paper04-feedforward-mappo",
         "exact_paper_reproduction": False,
         "configuration": asdict(config),
-        "provenance": _provenance(project_root),
+        "provenance": collect_provenance(project_root),
+        "comparison_protocol": comparison_protocol(config),
     }
     # Canonical JSON converts dataclass tuples to lists before resume comparison.
     manifest = cast(dict[str, object], json.loads(json.dumps(manifest, allow_nan=False)))
-    manifest["fingerprint"] = _digest(manifest)
+    manifest["fingerprint"] = stable_digest(manifest)
     manifest_path = directory / "manifest.json"
     if directory.exists():
         if not resume:
@@ -132,9 +100,7 @@ def run_baseline(
     else:
         directory.mkdir(parents=True, exist_ok=False)
         save_json_artifact(manifest_path, manifest)
-        with ZipFile(directory / "source.zip", "w", ZIP_DEFLATED) as archive:
-            for path in _source_files(project_root):
-                archive.write(path, str(path.relative_to(project_root)))
+        write_source_snapshot(project_root, directory / "source.zip")
 
     records: list[dict[str, float]] = []
     for seed in config.training_seeds:
@@ -164,6 +130,9 @@ def run_baseline(
         directory / "summary.json",
         {
             "fingerprint": manifest["fingerprint"],
+            "comparison_fingerprint": cast(dict[str, object], manifest["comparison_protocol"])[
+                "fingerprint"
+            ],
             "profile": config.profile,
             "exact_paper_reproduction": False,
             "training_seeds": list(config.training_seeds),
@@ -329,7 +298,7 @@ def evaluate_saved_baseline(
             "checkpoint_sha256": hashlib.sha256(checkpoint.read_bytes()).hexdigest(),
             "configuration": asdict(config),
             "simulator": simulator,
-            "evaluation_provenance": _provenance(project_root),
+            "evaluation_provenance": collect_provenance(project_root),
             "episodes": episodes,
             "summary": average_episodes(episodes),
             "evaluation_wall_seconds": perf_counter() - started,
