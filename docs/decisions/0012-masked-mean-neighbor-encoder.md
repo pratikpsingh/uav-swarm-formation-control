@@ -7,7 +7,7 @@ Accepted.
 ## Context
 
 Flattening padded neighbor rows makes the actor depend on arbitrary slot order and makes policies
-with different active counts difficult to interpret. Stage 11 must vary communication conditions
+with different active counts difficult to interpret. The neighbor study must vary communication conditions
 without changing observation capacity or giving the actor privileged global state.
 
 ## Decision

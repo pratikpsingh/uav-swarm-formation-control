@@ -1,4 +1,4 @@
-"""Auditable two-track report generation for Stage 13."""
+"""Auditable two-track report generation for cross-paper comparison."""
 
 from __future__ import annotations
 
@@ -243,7 +243,7 @@ def normalize_controlled_comparisons(
         dmpc_method_id = _string(dmpc.get("method"), "dmpc.method")
         if mappo_method_id not in method_by_id or dmpc_method_id not in method_by_id:
             raise ValueError(
-                "controlled artifact contains a method absent from the Stage 13 config."
+                "controlled artifact contains a method absent from the comparison configuration."
             )
         mappo_metrics, dmpc_metrics = _metric_rows(comparison, config.metrics)
         environment = _environment_label(protocol)
@@ -344,7 +344,7 @@ def render_markdown_report(
     coverage: Mapping[str, object],
     verified_sources: Sequence[Mapping[str, object]],
 ) -> str:
-    """Render tables that always carry the Stage 13 context gate columns."""
+    """Render tables that always carry the cross-paper comparison context gate columns."""
     lines = [
         f"# {config.name}",
         "",
@@ -469,7 +469,7 @@ def build_cross_paper_report(
     project_root: Path,
     evidence_root: Path,
 ) -> Path:
-    """Verify inputs and atomically write the Stage 13 report bundle."""
+    """Verify inputs and atomically write the cross-paper comparison report bundle."""
     verified = verify_evidence_sources(config, evidence_root)
     native_rows = native_evidence_rows(config)
     controlled_rows, coverage = normalize_controlled_comparisons(

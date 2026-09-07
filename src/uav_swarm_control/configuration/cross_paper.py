@@ -1,4 +1,4 @@
-"""Strict evidence configuration for Stage 13 cross-paper reports."""
+"""Strict evidence configuration for cross-paper reports."""
 
 import re
 from collections.abc import Mapping
@@ -124,7 +124,7 @@ class ControlledMethod:
 
 @dataclass(frozen=True, slots=True)
 class CrossPaperComparisonConfig:
-    """Complete Stage 13 evidence and controlled-result reporting contract."""
+    """Complete cross-paper comparison evidence and controlled-result reporting contract."""
 
     name: str
     sources: tuple[EvidenceSource, ...]
@@ -229,7 +229,7 @@ def _evidence(value: object, path: str) -> EvidenceValue:
 
 
 def cross_paper_config_from_mapping(value: object) -> CrossPaperComparisonConfig:
-    """Parse the closed Stage 13 schema."""
+    """Parse the closed cross-paper comparison schema."""
     root = _mapping(value, "configuration")
     _keys(
         root,

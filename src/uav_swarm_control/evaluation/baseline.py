@@ -17,7 +17,7 @@ from uav_swarm_control.algorithms.mappo.trainer import MAPPOUpdateMetrics
 from uav_swarm_control.configuration.baseline import BaselineConfig
 from uav_swarm_control.configuration.pybullet import PyBulletExperimentConfig
 from uav_swarm_control.controllers.proportional import ProportionalPositionController
-from uav_swarm_control.environments.paper04 import Paper04Environment
+from uav_swarm_control.environments.formation_progress import FormationProgressEnvironment
 from uav_swarm_control.evaluation.artifacts import save_json_artifact
 from uav_swarm_control.evaluation.benchmark import (
     ActorController,
@@ -80,7 +80,7 @@ def run_baseline(
     directory = output / config.profile / experiment.name
     manifest: dict[str, object] = {
         "artifact_schema_version": 1,
-        "method": "corrected-paper04-feedforward-mappo",
+        "method": "feedforward-mappo-baseline",
         "exact_paper_reproduction": False,
         "configuration": asdict(config),
         "provenance": collect_provenance(project_root),
@@ -149,8 +149,8 @@ def _run_seed(
     experiment = replace(config.mappo.experiment, seed=seed)
     physics = replace(config.physics, experiment=experiment)
 
-    def factory() -> Paper04Environment:
-        return Paper04Environment(physics)
+    def factory() -> FormationProgressEnvironment:
+        return FormationProgressEnvironment(physics)
 
     probe = factory()
     try:
@@ -268,8 +268,8 @@ def evaluate_saved_baseline(
         raise ValueError("checkpoint task/simulator differs from evaluation configuration.")
     model.eval()
 
-    def factory() -> Paper04Environment:
-        return Paper04Environment(physics)
+    def factory() -> FormationProgressEnvironment:
+        return FormationProgressEnvironment(physics)
 
     probe = factory()
     try:

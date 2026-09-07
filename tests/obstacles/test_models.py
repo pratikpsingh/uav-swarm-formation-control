@@ -39,7 +39,7 @@ def test_collision_uses_strict_sphere_overlap() -> None:
 
 def test_sampling_is_seeded_and_respects_scenario_counts() -> None:
     config = load_obstacle_experiment_config(
-        "configs/experiment/stage10_dynamic_obstacles_4uav.yaml"
+        "configs/experiment/obstacle-avoidance/plane-4-uav.yaml"
     )
     origins = np.array([[-1.4, -0.3, 1.6], [-1.4, 0.3, 1.6]])
     targets = np.array([[0.0, -0.3, 2.0], [0.0, 0.3, 2.0]])

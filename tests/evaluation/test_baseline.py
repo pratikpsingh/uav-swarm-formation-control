@@ -16,7 +16,7 @@ from uav_swarm_control.configuration import ConfigurationError, PyBulletSimulato
 from uav_swarm_control.configuration.baseline import load_baseline_config
 from uav_swarm_control.environments.contracts import NormalizedVelocityActions
 from uav_swarm_control.environments.drone_backend import RigidBodyState, SimulatorMetadataValue
-from uav_swarm_control.environments.paper04 import Paper04Environment
+from uav_swarm_control.environments.formation_progress import FormationProgressEnvironment
 from uav_swarm_control.environments.pybullet import PyBulletSwarmEnvironment
 from uav_swarm_control.evaluation.baseline import smoke_config
 from uav_swarm_control.evaluation.benchmark import evaluate_benchmark, summarize_seeds
@@ -24,7 +24,7 @@ from uav_swarm_control.formations import FormationKind
 from uav_swarm_control.observations import LocalObservations
 
 ROOT = Path(__file__).parents[2]
-CONFIG = ROOT / "configs/experiment/paper04_3uav.yaml"
+CONFIG = ROOT / "configs/experiment/baseline/triangle-3-uav.yaml"
 
 
 class ZeroController:
@@ -84,7 +84,8 @@ class TrajectoryBackend:
 
 @pytest.mark.parametrize("count,budget", [(3, 10_000_000), (4, 30_000_000), (5, 60_000_000)])
 def test_research_protocol_and_smoke_are_explicit(count: int, budget: int) -> None:
-    config = load_baseline_config(ROOT / f"configs/experiment/paper04_{count}uav.yaml")
+    names = {3: "triangle-3-uav.yaml", 4: "square-4-uav.yaml", 5: "pentagon-5-uav.yaml"}
+    config = load_baseline_config(ROOT / "configs/experiment/baseline" / names[count])
     assert config.mappo.algorithm.ppo.total_steps == budget
     assert len(config.training_seeds) == 5
     assert config.mappo.experiment.environment.max_episode_steps == 242
@@ -119,7 +120,7 @@ def test_progress_reward_and_reset_history() -> None:
     ) -> TrajectoryBackend:
         return backend
 
-    environment = Paper04Environment(
+    environment = FormationProgressEnvironment(
         replace(config, experiment=experiment), backend_factory=factory
     )
     try:
@@ -194,7 +195,7 @@ def test_cli_smoke_checkpoints_and_completed_seed_resume(tmp_path: Path) -> None
         str(ROOT),
     ]
     main(arguments)
-    directory = tmp_path / "smoke/paper04-3uav"
+    directory = tmp_path / "smoke/baseline-triangle-3-uav"
     result = json.loads((directory / "seed-11/result.json").read_text())
     assert result["summary"]["training_environment_steps"] == 256
     assert result["summary"]["training_agent_samples"] == 768

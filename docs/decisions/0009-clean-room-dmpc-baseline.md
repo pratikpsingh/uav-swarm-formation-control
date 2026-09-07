@@ -8,7 +8,7 @@
 `DMPC-to-MARL-Sim` contains both a classical trajectory optimizer and a learned approximate-MPC
 path. Its `run_dampc` name refers to the learned path, so selecting it would not produce the
 classical baseline required by the roadmap. Directly embedding the old asynchronous simulator and
-network stack would also prevent a controlled comparison with the Stage 7 MAPPO task.
+network stack would also prevent a controlled comparison with the MAPPO baseline task.
 
 ## Decision
 

@@ -25,7 +25,7 @@ from uav_swarm_control.formations import FormationPoseRange, rotation_matrix_fro
 from uav_swarm_control.observations import LocalObservations
 
 ROOT = Path(__file__).parents[2]
-CONFIG = ROOT / "configs/experiment/stage9_plane_4uav.yaml"
+CONFIG = ROOT / "configs/experiment/pose-generalization/plane-4-uav.yaml"
 
 
 def _state(positions: Float32Array, velocities: Float32Array | None = None) -> RigidBodyState:

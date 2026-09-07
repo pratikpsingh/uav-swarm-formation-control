@@ -1,24 +1,24 @@
-# Stage 9 3D pose-generalization task; smoke mode is plumbing only.
+# Feed-forward MAPPO baseline inspired by Paper 04; see docs/mappo-baseline.md.
 schema_version: 1
-name: stage9-pyramid-5uav
+name: baseline-square-4-uav
 seed: 11
 formation:
-  kind: pyramid
-  num_agents: 5
-  spacing_m: 0.6
-  center_m: [0.0, 0.0, 2.0]
+  kind: polygon
+  num_agents: 4
+  spacing_m: 1.0
+  center_m: [0.0, 0.0, 1.0]
   euler_radians: [0.0, 0.0, 0.0]
 environment:
   time_step_seconds: 0.03333333333333333
-  max_episode_steps: 360
+  max_episode_steps: 242
   max_velocity_component_mps: 0.5
 observation:
-  max_neighbors: 4
+  max_neighbors: 3
   neighbor_radius_m: null
 task:
-  initial_center_m: [-1.2, 0.0, 1.5]
-  initial_position_noise_m: 0.05
-  success_tolerance_m: 0.12
+  initial_center_m: [-1.0, 0.0, 1.0]
+  initial_position_noise_m: 0.1
+  success_tolerance_m: 0.08
   success_hold_steps: 15
   collision_distance_m: 0.2
   terminate_on_collision: true
@@ -38,7 +38,7 @@ simulator:
   gui: false
   record_video: false
 algorithm:
-  total_steps: 10000000
+  total_steps: 30000000
   rollout_steps: 1000
   num_environments: 20
   update_epochs: 4
@@ -56,26 +56,7 @@ algorithm:
   device: auto
 evaluation:
   episodes: 20
-generalization:
-  training_pose:
-    center_offset_lower_m: [-0.2, -0.2, -0.2]
-    center_offset_upper_m: [0.2, 0.2, 0.2]
-    euler_offset_lower_radians: [-0.35, -0.35, -0.5]
-    euler_offset_upper_radians: [0.35, 0.35, 0.5]
-    scale_lower: 0.9
-    scale_upper: 1.1
-  held_out_pose:
-    center_offset_lower_m: [0.5, -0.7, 0.2]
-    center_offset_upper_m: [0.8, -0.4, 0.4]
-    euler_offset_lower_radians: [0.7, -1.0, 0.8]
-    euler_offset_upper_radians: [1.0, -0.7, 1.1]
-    scale_lower: 1.2
-    scale_upper: 1.35
-  variants:
-    - name: minimum-target
-      assignment: minimum-distance
-      coordinate_frame: target
 protocol:
   training_seeds: [11, 22, 33, 44, 55]
-  evaluation_seed: 20260909
+  evaluation_seed: 20260907
   profile: research

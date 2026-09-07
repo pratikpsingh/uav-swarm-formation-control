@@ -1,10 +1,10 @@
-# Corrected feed-forward MA-PPO baseline; see docs/paper04-baseline.md for deviations.
+# Feed-forward MAPPO baseline inspired by Paper 04; see docs/mappo-baseline.md.
 schema_version: 1
-name: paper04-3uav
+name: baseline-pentagon-5-uav
 seed: 11
 formation:
   kind: polygon
-  num_agents: 3
+  num_agents: 5
   spacing_m: 1.0
   center_m: [0.0, 0.0, 1.0]
   euler_radians: [0.0, 0.0, 0.0]
@@ -13,7 +13,7 @@ environment:
   max_episode_steps: 242
   max_velocity_component_mps: 0.5
 observation:
-  max_neighbors: 2
+  max_neighbors: 4
   neighbor_radius_m: null
 task:
   initial_center_m: [-1.0, 0.0, 1.0]
@@ -38,7 +38,7 @@ simulator:
   gui: false
   record_video: false
 algorithm:
-  total_steps: 10000000
+  total_steps: 60000000
   rollout_steps: 1000
   num_environments: 20
   update_epochs: 4

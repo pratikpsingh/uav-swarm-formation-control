@@ -5,7 +5,7 @@
 How do requested neighbor count, achieved communication topology, sensing range, obstacle
 condition, formation geometry, and swarm size affect decentralized formation control?
 
-Stage 11 is a controlled study, not a search for one universal neighbor count. A requested count
+The neighbor and communication experiment is a controlled study, not a search for one universal neighbor count. A requested count
 is only an upper bound: range limits may make fewer agents observable. Results therefore report
 both the configured request and the graph that actually occurred.
 
@@ -32,8 +32,8 @@ evaluation and deployment.
 
 Two files vary formation and swarm size:
 
-- `stage11_plane_4uav.yaml`: planar four-UAV formation;
-- `stage11_pyramid_5uav.yaml`: spatial five-UAV formation.
+- `neighbor-study/plane-4-uav.yaml`: planar four-UAV formation;
+- `neighbor-study/pyramid-5-uav.yaml`: spatial five-UAV formation.
 
 Each file crosses:
 
@@ -92,8 +92,8 @@ Bounded integration run:
 
 ```bash
 uv run uav-swarm-control run-communication-study \
-  --config configs/experiment/stage11_plane_4uav.yaml \
-  --config configs/experiment/stage11_pyramid_5uav.yaml \
+  --config configs/experiment/neighbor-study/plane-4-uav.yaml \
+  --config configs/experiment/neighbor-study/pyramid-5-uav.yaml \
   --smoke \
   --output artifacts/communication/check \
   --project-root .

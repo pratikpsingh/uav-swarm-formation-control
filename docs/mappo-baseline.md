@@ -1,6 +1,6 @@
-# Corrected Paper 04 baseline
+# Feed-forward MAPPO baseline
 
-The implemented method is **corrected-paper04-feedforward-mappo**. It is a controlled baseline
+The implemented method is **feedforward-mappo-baseline**. It is a controlled baseline
 inspired by Paper 04's MA-PPO ablation, not an exact implementation of its MA-LSTM-PPO method.
 A completed software smoke test does not establish convergence or reproduce the paper's tables.
 
@@ -20,7 +20,7 @@ Paper 04 PDF (SSRN 5286784, preprint). The audit inspected Section 3.1, Section 
 | Batch/workers | train_batch_size 20000, 80 Ray workers | 1000 rollout steps x 20 independent environments = 20000 environment transitions per update; sequential stepping |
 | Episode limit | Table 3: 242; old script overrides to 240 | 242 control steps |
 | Timing | Old wrapper defaults to 30 Hz, 8 seconds | 30 Hz control, 240 Hz physics; 242 steps = 8.0667 seconds |
-| Physics | Custom PyBullet Crazyflie; paper discusses drag/ground effects | Pinned Stage 6 Crazyflie CF2X; ground, drag, downwash enabled |
+| Physics | Custom PyBullet Crazyflie; paper discusses drag/ground effects | Pinned Crazyflie CF2X; ground, drag, downwash enabled |
 | Action | Eq. 18: direction plus magnitude; PID to motors | Three normalized world-velocity components, 0.5 m/s per component |
 | Local observations | Eq. 17 describes position, attitude, velocity, rotor state plus neighbors | Assigned-target displacement, own linear velocity, relative neighbor positions/velocities and masks |
 | Critic | Joint/shared observations | Positions, velocities and targets for all UAVs; no attitude/PID memory |
@@ -93,9 +93,9 @@ From the repository root:
 ```bash
 uv sync --locked
 uv run uav-swarm-control run-baseline \
-  --config configs/experiment/paper04_3uav.yaml \
-  --config configs/experiment/paper04_4uav.yaml \
-  --config configs/experiment/paper04_5uav.yaml \
+  --config configs/experiment/baseline/triangle-3-uav.yaml \
+  --config configs/experiment/baseline/square-4-uav.yaml \
+  --config configs/experiment/baseline/pentagon-5-uav.yaml \
   --smoke --output artifacts/baselines/check
 ```
 
@@ -111,10 +111,10 @@ After committing the source and installing the lockfile:
 
 ```bash
 uv run uav-swarm-control run-baseline \
-  --config configs/experiment/paper04_3uav.yaml \
-  --config configs/experiment/paper04_4uav.yaml \
-  --config configs/experiment/paper04_5uav.yaml \
-  --output artifacts/baselines/paper04-v1
+  --config configs/experiment/baseline/triangle-3-uav.yaml \
+  --config configs/experiment/baseline/square-4-uav.yaml \
+  --config configs/experiment/baseline/pentagon-5-uav.yaml \
+  --output artifacts/baselines/mappo-baseline-v1
 ```
 
 This requests **500 million environment transitions and 2.25 billion agent samples** in total over
@@ -135,7 +135,7 @@ requires a new output root. No claim of exact optimizer resumption is made.
 Each task writes:
 
 ```text
-research/paper04-3uav/
+research/baseline-triangle-3-uav/
   manifest.json       method label, resolved config, source/runtime fingerprints
   source.zip          exact Python source, pyproject.toml, uv.lock
   seed-11/
@@ -152,9 +152,9 @@ Use a saved policy again without training:
 
 ```bash
 uv run uav-swarm-control evaluate-baseline \
-  --config configs/experiment/paper04_3uav.yaml \
-  --checkpoint artifacts/baselines/paper04-v1/research/paper04-3uav/seed-11/model.pt \
-  --output artifacts/baselines/paper04-v1/research/paper04-3uav/seed-11/reevaluation.json
+  --config configs/experiment/baseline/triangle-3-uav.yaml \
+  --checkpoint artifacts/baselines/mappo-baseline-v1/research/baseline-triangle-3-uav/seed-11/model.pt \
+  --output artifacts/baselines/mappo-baseline-v1/research/baseline-triangle-3-uav/seed-11/reevaluation.json
 ```
 
 For a smoke checkpoint, also supply `--smoke`. Task and simulator compatibility are checked before

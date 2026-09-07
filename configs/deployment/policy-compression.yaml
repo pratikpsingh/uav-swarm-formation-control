@@ -1,6 +1,6 @@
-# Stage 12; use only after a full Stage 11 teacher passes these predeclared gates.
+# Use only after a full neighbor-study teacher passes these predeclared gates.
 schema_version: 1
-name: stage12-policy-compression
+name: policy-compression
 teacher_gate:
   - condition: k2-global-mixed
     minimum_collision_free_success: 0.80

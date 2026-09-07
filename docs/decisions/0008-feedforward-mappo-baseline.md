@@ -14,7 +14,7 @@ Final-step metrics also miss collisions and excessive movement earlier in an epi
 Compose the validated MAPPO and PyBullet schemas and require five distinct training seeds.
 Implement paper-style progress reward and activate normalized formation cost. Retain the verified
 feed-forward actor/critic as a named MA-PPO baseline, with every known deviation documented in
-paper04-baseline.md. Keep the existing kinematic and Stage 6 reward paths unchanged.
+mappo-baseline.md. Keep the existing kinematic and PyBullet reward paths unchanged.
 
 Evaluate reloaded actors on paired held-out episodes and collect metrics over the entire trajectory.
 Aggregate episodes within seeds before estimating variation between seeds. Keep a scripted

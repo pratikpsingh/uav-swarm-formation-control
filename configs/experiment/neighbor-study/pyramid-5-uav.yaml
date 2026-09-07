@@ -1,6 +1,6 @@
-# Stage 11 neighbor-topology study; --smoke validates plumbing only.
+# Neighbor-topology study; --smoke validates plumbing only.
 schema_version: 1
-name: stage11-neighbors-pyramid-5uav
+name: neighbor-study-pyramid-5-uav
 seed: 11
 formation:
   kind: pyramid

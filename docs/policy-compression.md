@@ -2,19 +2,19 @@
 
 ## Question
 
-How small can the decentralized Stage 11 actor become without losing collision-free formation
+How small can the decentralized neighbor-study actor become without losing collision-free formation
 performance? This is a constrained optimization problem, not a file-compression contest. A tiny actor
 that crashes or fails to reach the goal is not a successful deployment.
 
 ## Teacher gate
 
-The research command accepts only a Stage 11 checkpoint whose SHA-256 digest matches its result
+The research command accepts only a neighbor-study checkpoint whose SHA-256 digest matches its result
 file, whose seed and manifest fingerprint match checkpoint metadata, whose resolved task
 configuration equals the requested task, and whose predeclared condition metrics pass the YAML
 gates. Smoke mode still checks identity and provenance, but labels every output
 `plumbing-only-smoke-teacher`; it cannot produce a scientific result.
 
-Select the teacher after the full Stage 11 runs, using the predeclared safety and task gates rather than
+Select the teacher after the full neighbor-study runs, using the predeclared safety and task gates rather than
 choosing whichever checkpoint happens to compress best. This prevents post-hoc selection bias.
 
 ## Controlled comparisons
@@ -26,7 +26,7 @@ student learns the deterministic teacher's actions. Complete episodes—not indi
 into training and validation sets, stratified by condition when each condition has multiple episodes, and recurrent state starts at zero for each episode.
 
 Five independent distillation seeds quantify optimization variation. Each student is then run in closed
-loop on the same Stage 11 conditions and episode seeds as the teacher. Imitation MSE is diagnostic;
+loop on the same neighbor-study conditions and episode seeds as the teacher. Imitation MSE is diagnostic;
 the decision metrics are collision-free success, collisions, formation error, clearance, path length,
 smoothness, and time to goal. Closed-loop evaluation is essential because small action errors can
 change later observations and accumulate.
@@ -54,7 +54,7 @@ Paper 02 deployed on Crazyflie 2.1 with a 168 MHz CPU and 192 KB RAM. It reduced
 attention hidden sizes to 10, used single-head attention, and reported a 1,820-parameter, 7 KB model
 running in 0.35 ms onboard. Its Table II compares training from scratch with policy distillation over
 20 episodes for eight robots at 20% obstacle density. Our task, observation encoder, dynamics, and
-artifact format differ, so these numbers are context—not a direct leaderboard. Stage 12 mirrors the
+artifact format differ, so these numbers are context—not a direct leaderboard. The compression study mirrors the
 important discipline: report task quality and systems cost together.
 
 ## Commands
@@ -65,13 +65,13 @@ Install the optional supported quantization path:
 uv sync --extra deployment
 ```
 
-Exercise every candidate and all five seeds with bounded budgets, using a matching Stage 11 smoke
+Exercise every candidate and all five seeds with bounded budgets, using a matching neighbor-study smoke
 teacher:
 
 ```bash
 uv run --extra deployment uav-swarm-control run-deployment-study \
-  --task configs/experiment/stage11_plane_4uav.yaml \
-  --deployment configs/deployment/stage12_policy_compression.yaml \
+  --task configs/experiment/neighbor-study/plane-4-uav.yaml \
+  --deployment configs/deployment/policy-compression.yaml \
   --teacher-checkpoint artifacts/communication/<run>/smoke/<task>/<regimen>/seed-11/model.pt \
   --teacher-result artifacts/communication/<run>/smoke/<task>/<regimen>/seed-11/result.json \
   --smoke \

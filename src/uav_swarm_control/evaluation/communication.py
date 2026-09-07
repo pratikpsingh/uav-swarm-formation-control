@@ -138,7 +138,7 @@ def run_communication_study(
     directory = output / config.profile / experiment.name
     manifest: dict[str, object] = {
         "artifact_schema_version": 1,
-        "method": "stage11-permutation-invariant-neighbor-mappo",
+        "method": "neighbor-encoder-mappo",
         "configuration": asdict(config),
         "provenance": collect_provenance(project_root),
         "design": {

@@ -10,7 +10,7 @@ from typing import cast
 from uav_swarm_control.configuration import DMPCConfig
 from uav_swarm_control.configuration.baseline import BaselineConfig
 from uav_swarm_control.controllers.dmpc import DistributedMPCController
-from uav_swarm_control.environments.paper04 import Paper04Environment
+from uav_swarm_control.environments.formation_progress import FormationProgressEnvironment
 from uav_swarm_control.evaluation.artifacts import save_json_artifact
 from uav_swarm_control.evaluation.baseline import smoke_config
 from uav_swarm_control.evaluation.benchmark import evaluate_benchmark, summarize_records
@@ -63,8 +63,8 @@ def run_dmpc(
     save_json_artifact(directory / "manifest.json", manifest)
     write_source_snapshot(project_root, directory / "source.zip")
 
-    def factory() -> Paper04Environment:
-        return Paper04Environment(task.physics)
+    def factory() -> FormationProgressEnvironment:
+        return FormationProgressEnvironment(task.physics)
 
     probe = factory()
     try:

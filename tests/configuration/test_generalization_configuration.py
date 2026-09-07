@@ -1,4 +1,4 @@
-"""Validation tests for Stage 9 experiment protocols."""
+"""Validation tests for pose-generalization experiment protocols."""
 
 from pathlib import Path
 from typing import cast
@@ -11,17 +11,17 @@ from uav_swarm_control.evaluation.generalization import generalization_smoke_con
 from uav_swarm_control.formations import FormationKind, pose_ranges_overlap
 
 ROOT = Path(__file__).parents[2]
-CONFIG_DIRECTORY = ROOT / "configs/experiment"
-CUBE_CONFIG = CONFIG_DIRECTORY / "stage9_cube_8uav.yaml"
+CONFIG_DIRECTORY = ROOT / "configs/experiment/pose-generalization"
+CUBE_CONFIG = CONFIG_DIRECTORY / "cube-8-uav.yaml"
 
 
 @pytest.mark.parametrize(
     ("name", "kind", "agents", "variants"),
     [
-        ("stage9_plane_4uav.yaml", FormationKind.PLANE, 4, 1),
-        ("stage9_pyramid_5uav.yaml", FormationKind.PYRAMID, 5, 1),
-        ("stage9_cube_8uav.yaml", FormationKind.CUBE, 8, 4),
-        ("stage9_sphere_8uav.yaml", FormationKind.SPHERE, 8, 1),
+        ("plane-4-uav.yaml", FormationKind.PLANE, 4, 1),
+        ("pyramid-5-uav.yaml", FormationKind.PYRAMID, 5, 1),
+        ("cube-8-uav.yaml", FormationKind.CUBE, 8, 4),
+        ("sphere-8-uav.yaml", FormationKind.SPHERE, 8, 1),
     ],
 )
 def test_research_suite_is_explicit_and_disjoint(

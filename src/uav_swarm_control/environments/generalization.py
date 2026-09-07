@@ -15,8 +15,8 @@ from uav_swarm_control.environments.contracts import (
     ResetResult,
     StepResult,
 )
+from uav_swarm_control.environments.formation_progress import FormationProgressEnvironment
 from uav_swarm_control.environments.gym_pybullet_drones import GymPyBulletDronesBackend
-from uav_swarm_control.environments.paper04 import Paper04Environment
 from uav_swarm_control.environments.pybullet import BackendFactory
 from uav_swarm_control.formations import (
     FormationAssignment,
@@ -37,7 +37,7 @@ from uav_swarm_control.observations import (
 from uav_swarm_control.seeding import RandomStream, make_rng
 
 
-class GeneralizedFormationEnvironment(Paper04Environment):
+class GeneralizedFormationEnvironment(FormationProgressEnvironment):
     """Randomize target pose while keeping initial geometry independent and observable."""
 
     def __init__(

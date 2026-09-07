@@ -126,7 +126,7 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate_multi_agent.add_argument("--config", type=Path, required=True)
     evaluate_multi_agent.add_argument("--checkpoint", type=Path, required=True)
     baseline = commands.add_parser(
-        "run-baseline", help="train and evaluate the corrected Paper 04 baseline across seeds"
+        "run-baseline", help="train and evaluate the feed-forward MAPPO baseline across seeds"
     )
     baseline.add_argument("--config", type=Path, action="append", required=True)
     baseline.add_argument("--output", type=Path, default=Path("artifacts/baselines"))
@@ -142,7 +142,7 @@ def build_parser() -> argparse.ArgumentParser:
     baseline.add_argument("--torch-threads", type=int, default=1)
     generalization = commands.add_parser(
         "run-generalization",
-        help="train and evaluate Stage 9 policies on disjoint 3D pose splits",
+        help="train and evaluate policies on disjoint 3D pose splits",
     )
     generalization.add_argument("--config", type=Path, action="append", required=True)
     generalization.add_argument("--output", type=Path, default=Path("artifacts/generalization"))
@@ -196,7 +196,7 @@ def build_parser() -> argparse.ArgumentParser:
     communication.add_argument("--torch-threads", type=int, default=1)
     deployment = commands.add_parser(
         "run-deployment-study",
-        help="compress a validated Stage 11 teacher and benchmark actor-only artifacts",
+        help="compress a validated neighbor-study teacher and benchmark actor-only artifacts",
     )
     deployment.add_argument("--task", type=Path, required=True)
     deployment.add_argument("--deployment", type=Path, required=True)
@@ -220,7 +220,7 @@ def build_parser() -> argparse.ArgumentParser:
     baseline_evaluate.add_argument("--smoke", action="store_true")
     dmpc = commands.add_parser(
         "run-dmpc",
-        help="evaluate the classical DMPC adaptation on one or more Paper 04 tasks",
+        help="evaluate the classical DMPC adaptation on one or more baseline tasks",
     )
     dmpc.add_argument("--task", type=Path, action="append", required=True)
     dmpc.add_argument("--controller", type=Path, required=True)
@@ -240,7 +240,7 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("--output", type=Path, required=True)
     cross_paper = commands.add_parser(
         "build-cross-paper-report",
-        help="build separate controlled and native-system Stage 13 comparison tracks",
+        help="build separate controlled and native-system cross-paper comparison tracks",
     )
     cross_paper.add_argument("--config", type=Path, required=True)
     cross_paper.add_argument(

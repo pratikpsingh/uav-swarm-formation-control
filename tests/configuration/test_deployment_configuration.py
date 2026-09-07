@@ -1,4 +1,4 @@
-"""Stage 12 configuration invariants."""
+"""Policy-compression configuration invariants."""
 
 from dataclasses import replace
 from pathlib import Path
@@ -15,7 +15,7 @@ from uav_swarm_control.configuration.deployment import (
 )
 from uav_swarm_control.deployment.contracts import DeploymentArchitecture
 
-CONFIG = Path("configs/deployment/stage12_policy_compression.yaml")
+CONFIG = Path("configs/deployment/policy-compression.yaml")
 
 
 def test_research_matrix_covers_every_planned_comparison() -> None:

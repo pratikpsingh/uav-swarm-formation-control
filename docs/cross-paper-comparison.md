@@ -1,10 +1,10 @@
 # Cross-paper comparison protocol
 
-Stage 13 separates two questions that cannot be answered by one leaderboard.
+The cross-paper protocol separates two questions that cannot be answered by one leaderboard.
 
 The **controlled common-environment track** asks how implemented controllers behave when the task,
 simulator, initial-condition protocol, horizon, and metrics are identical. It currently accepts the
-guarded Stage 8 comparison artifacts for the corrected Paper 04 feed-forward MAPPO baseline and the
+guarded common-environment comparison artifacts for the corrected Paper 04 feed-forward MAPPO baseline and the
 clean-room DMPC-Swarm adaptation. Each artifact already proves that the two controllers share a
 comparison fingerprint.
 
@@ -24,12 +24,12 @@ velocity-command transitions in another physics engine.
 
 Even identical metric names can hide different random variables. Paper 02's success is an agent-level
 native quantity. Paper 03's collision-free rate combines arrival and collision conditions. This
-project's `collision_free_success` is an episode-level common-harness metric. Stage 13 therefore
+project's `collision_free_success` is an episode-level common-harness metric. The report builder therefore
 compares values only when their protocol fingerprint and metric implementation are shared.
 
 ## Evidence catalog
 
-The checked-in `configs/comparison/stage13_cross_paper.yaml` catalog requires every native row to
+The checked-in `configs/comparison/cross-paper.yaml` catalog requires every native row to
 state:
 
 - environment and simulator version or an explicit `not-reported` status;
@@ -66,10 +66,10 @@ evaluation episodes. They are intentionally not interpreted as equivalent estima
 
 ```bash
 uv run uav-swarm-control build-cross-paper-report \
-  --config configs/comparison/stage13_cross_paper.yaml \
-  --comparison artifacts/baselines/<run>/smoke/paper04-3uav/controller-comparison.json \
-  --comparison artifacts/baselines/<run>/smoke/paper04-4uav/controller-comparison.json \
-  --comparison artifacts/baselines/<run>/smoke/paper04-5uav/controller-comparison.json \
+  --config configs/comparison/cross-paper.yaml \
+  --comparison artifacts/baselines/<run>/smoke/baseline-triangle-3-uav/controller-comparison.json \
+  --comparison artifacts/baselines/<run>/smoke/baseline-square-4-uav/controller-comparison.json \
+  --comparison artifacts/baselines/<run>/smoke/baseline-pentagon-5-uav/controller-comparison.json \
   --output artifacts/comparison/<report-run> \
   --project-root . \
   --evidence-root ..
@@ -83,9 +83,9 @@ task is present and all controlled inputs use the `research` profile. Complete s
 
 ## What remains for the thesis
 
-Stage 13 completes the software and evidence protocol, not the expensive empirical study. Run the
-full Stage 7 and Stage 8 lab protocols first, inspect convergence and failures, build a research-profile
-report, and freeze it before introducing Stage 9-12 treatments. Paper 01-03 require explicit adapters
+The cross-paper workflow completes the software and evidence protocol, not the expensive empirical study. Run the
+full MAPPO baseline and DMPC comparison protocols first, inspect convergence and failures, build a research-profile
+report, and freeze it before introducing the pose, obstacle, neighbor, and compression treatments. Paper 01-03 require explicit adapters
 to this project's common action/observation/environment contract before they can enter the controlled
 track. Until those adapters exist, their native evidence belongs only in the native-system track.
 

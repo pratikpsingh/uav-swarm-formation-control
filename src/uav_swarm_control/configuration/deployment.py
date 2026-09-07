@@ -1,4 +1,4 @@
-"""Strict Stage 12 policy-compression configuration."""
+"""Strict policy-compression configuration."""
 
 import math
 import re
@@ -18,7 +18,7 @@ _NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 @dataclass(frozen=True, slots=True)
 class TeacherConditionGate:
-    """Minimum acceptable teacher behavior on one named Stage 11 condition."""
+    """Minimum acceptable teacher behavior on one named neighbor study condition."""
 
     condition: str
     minimum_collision_free_success: float
@@ -400,7 +400,7 @@ def deployment_study_config_from_mapping(value: object) -> DeploymentStudyConfig
 
 
 def load_deployment_study_config(path: str | Path) -> DeploymentStudyConfig:
-    """Safely load one Stage 12 configuration."""
+    """Safely load one policy-compression study configuration."""
     config_path = Path(path)
     if config_path.suffix not in {".yaml", ".yml"}:
         raise ConfigurationError("deployment configuration must use .yaml or .yml.")

@@ -107,7 +107,7 @@ class DMPCSolverConfig:
 
 @dataclass(frozen=True, slots=True)
 class DMPCConfig:
-    """Controller-only settings composed with a Stage 7 task at runtime."""
+    """Controller-only settings composed with a MAPPO baseline task at runtime."""
 
     schema_version: int
     name: str

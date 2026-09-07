@@ -100,7 +100,7 @@ def run_obstacle_study(
     directory = output / config.profile / experiment.name
     manifest: dict[str, object] = {
         "artifact_schema_version": 1,
-        "method": "stage10-oracle-dynamic-obstacle-mappo",
+        "method": "oracle-obstacle-mappo",
         "configuration": asdict(config),
         "provenance": collect_provenance(project_root),
         "design": {

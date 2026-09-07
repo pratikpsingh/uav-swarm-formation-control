@@ -1,4 +1,4 @@
-"""Strict configuration for the Stage 10 oracle-obstacle study."""
+"""Strict configuration for the oracle dynamic-obstacle study."""
 
 import math
 import re
@@ -117,23 +117,25 @@ class ObstacleExperimentConfig:
         if experiment != self.physics.experiment:
             raise ConfigurationError("MAPPO and physics must share one experiment configuration.")
         if experiment.formation.kind is not FormationKind.PLANE:
-            raise ConfigurationError("Stage 10 fixes formation.kind to plane to isolate obstacles.")
+            raise ConfigurationError(
+                "dynamic-obstacle study fixes formation.kind to plane to isolate obstacles."
+            )
         if experiment.observation.max_neighbors != experiment.formation.num_agents - 1:
             raise ConfigurationError(
-                "Stage 10 fixes sensing to every other agent; neighbors vary later."
+                "dynamic-obstacle study fixes sensing to every other agent; neighbors vary later."
             )
         roles = [regimen.role for regimen in self.training_regimens]
         names = [regimen.name for regimen in self.training_regimens]
         if set(roles) != set(TrainingRole) or len(roles) != len(TrainingRole):
             raise ConfigurationError(
-                "Stage 10 requires exactly one regimen for each training role."
+                "dynamic-obstacle study requires exactly one regimen for each training role."
             )
         if len(set(names)) != len(names):
             raise ConfigurationError("training regimen names must be unique.")
         required_scenarios = tuple(ObstacleScenario)
         if self.evaluation_scenarios != required_scenarios:
             raise ConfigurationError(
-                "evaluation_scenarios must list each Stage 10 scenario in order."
+                "evaluation_scenarios must list each dynamic-obstacle study scenario in order."
             )
         if len(self.training_seeds) < 5 or len(set(self.training_seeds)) != len(
             self.training_seeds
@@ -149,7 +151,9 @@ class ObstacleExperimentConfig:
         if experiment.reward.formation_weight <= 0.0:
             raise ConfigurationError("obstacle avoidance requires an active formation reward.")
         if experiment.reward.smoothness_weight or experiment.reward.success_bonus:
-            raise ConfigurationError("Stage 10 retains the corrected Paper 04 reward definition.")
+            raise ConfigurationError(
+                "dynamic-obstacle study retains the baseline reward definition."
+            )
         if self.pose.scale_lower * experiment.formation.spacing_m <= (
             experiment.task.collision_distance_m
         ):
@@ -405,7 +409,7 @@ def obstacle_experiment_config_from_mapping(value: object) -> ObstacleExperiment
 
 
 def load_obstacle_experiment_config(path: str | Path) -> ObstacleExperimentConfig:
-    """Safely load one self-contained Stage 10 experiment."""
+    """Safely load one self-contained dynamic-obstacle study experiment."""
     config_path = Path(path)
     if config_path.suffix not in {".yaml", ".yml"}:
         raise ConfigurationError("obstacle configuration must use .yaml or .yml.")

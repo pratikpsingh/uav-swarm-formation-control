@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class DeploymentArchitecture(StrEnum):
-    """Actor families compared by Stage 12."""
+    """Actor families compared by the policy-compression study."""
 
     FEED_FORWARD = "feed-forward"
     GRU = "gru"

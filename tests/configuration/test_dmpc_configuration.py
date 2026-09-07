@@ -9,7 +9,7 @@ import yaml
 from uav_swarm_control.configuration import ConfigurationError, load_dmpc_config
 
 ROOT = Path(__file__).parents[2]
-CONFIG = ROOT / "configs/algorithm/dmpc_native.yaml"
+CONFIG = ROOT / "configs/algorithm/dmpc.yaml"
 
 
 def test_native_reference_parameters_are_explicit() -> None:

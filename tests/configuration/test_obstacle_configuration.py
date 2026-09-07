@@ -1,4 +1,4 @@
-"""Validation tests for the controlled Stage 10 protocol."""
+"""Validation tests for the controlled dynamic-obstacle study protocol."""
 
 from pathlib import Path
 from typing import cast
@@ -14,7 +14,7 @@ from uav_swarm_control.configuration import (
 )
 from uav_swarm_control.obstacles import ObstacleScenario
 
-CONFIG = Path(__file__).parents[2] / "configs/experiment/stage10_dynamic_obstacles_4uav.yaml"
+CONFIG = Path(__file__).parents[2] / "configs/experiment/obstacle-avoidance/plane-4-uav.yaml"
 
 
 def test_research_protocol_has_matched_controls_and_curriculum() -> None:

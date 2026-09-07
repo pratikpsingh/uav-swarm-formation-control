@@ -1,4 +1,4 @@
-"""Strict configuration for Stage 9 three-dimensional generalization studies."""
+"""Strict configuration for three-dimensional pose-generalization studies."""
 
 import math
 import re
@@ -93,7 +93,9 @@ class GeneralizationConfig:
             raise ConfigurationError("MAPPO and physics must share one experiment configuration.")
         if experiment.formation.kind not in _SPATIAL_FORMATIONS:
             choices = ", ".join(sorted(item.value for item in _SPATIAL_FORMATIONS))
-            raise ConfigurationError(f"Stage 9 formation.kind must be one of: {choices}.")
+            raise ConfigurationError(
+                f"pose-generalization study formation.kind must be one of: {choices}."
+            )
         if not self.variants:
             raise ConfigurationError("generalization requires at least one variant.")
         names = [variant.name for variant in self.variants]
@@ -116,7 +118,9 @@ class GeneralizationConfig:
         if experiment.reward.formation_weight <= 0.0:
             raise ConfigurationError("3D generalization requires an active formation reward.")
         if experiment.reward.smoothness_weight or experiment.reward.success_bonus:
-            raise ConfigurationError("Stage 9 retains the corrected Paper 04 reward definition.")
+            raise ConfigurationError(
+                "pose-generalization study retains the baseline reward definition."
+            )
 
         minimum_scale = min(self.training_pose.scale_lower, self.held_out_pose.scale_lower)
         if minimum_scale * experiment.formation.spacing_m <= experiment.task.collision_distance_m:
@@ -230,7 +234,7 @@ def _variant(value: object, *, index: int) -> GeneralizationVariant:
 
 
 def generalization_config_from_mapping(value: object) -> GeneralizationConfig:
-    """Compose existing MAPPO/PyBullet schemas with strict Stage 9 choices."""
+    """Compose existing MAPPO/PyBullet schemas with strict pose-generalization study choices."""
     root = _mapping(value, path="configuration")
     generalization = _mapping(root.get("generalization"), path="generalization")
     _keys(
@@ -273,7 +277,7 @@ def generalization_config_from_mapping(value: object) -> GeneralizationConfig:
 
 
 def load_generalization_config(path: str | Path) -> GeneralizationConfig:
-    """Safely load one self-contained Stage 9 experiment."""
+    """Safely load one self-contained pose-generalization study experiment."""
     config_path = Path(path)
     if config_path.suffix not in {".yaml", ".yml"}:
         raise ConfigurationError("generalization configuration must use .yaml or .yml.")

@@ -56,7 +56,7 @@ controller protocol. Training has an optional update callback for progress recor
 checkpoints. The experiment runner owns source/runtime provenance, completed-seed validation, and
 aggregation across independent training seeds. Scientific validation is separate from smoke tests.
 
-Stage 8 adds optional `StateAwareController` and `EpisodeResettableController` capabilities without
+The DMPC comparison adds optional `StateAwareController` and `EpisodeResettableController` capabilities without
 weakening the original local-observation `Controller` protocol. The common evaluator performs
 structural dispatch: learned actors continue to receive only local observations, while model-based
 controllers can explicitly request centralized state. This information difference is recorded in
@@ -68,7 +68,7 @@ shared provenance module and a hashed comparison protocol. The hash covers envir
 evaluation schedule, horizon and metric schema; result comparison fails closed when hashes differ.
 Controller-specific solver diagnostics remain outside common task metrics.
 
-Stage 9 keeps pose sampling and linear assignment in the simulator-independent `formations`
+The pose-generalization workflow keeps pose sampling and linear assignment in the simulator-independent `formations`
 package. A specialized physical environment samples a target pose from its own deterministic random
 stream, leaves the initial formation geometry independent, assigns target points, and optionally
 expresses actor/critic inputs in the target frame. World-frame physics, rewards, terminal conditions,
@@ -76,13 +76,13 @@ and external metrics remain unchanged. The experiment runner trains independent 
 fresh episodes from in-distribution and disjoint held-out pose ranges, and reports held-out-minus-
 in-distribution gaps without treating smoke policies as scientific evidence.
 
-Stage 10 keeps kinematic sphere mathematics in `obstacles`, curriculum/protocol validity in
+The dynamic-obstacle workflow keeps kinematic sphere mathematics in `obstacles`, curriculum/protocol validity in
 `configuration`, oracle observation/reward/termination composition in `environments`, and multi-seed
 paired comparisons in `evaluation`. Obstacle randomness has an independent stream. Fixed-width masks
 keep actor and critic architectures identical across no/static/dynamic cases. The Crazyflie dynamics
 remain physical, while obstacle bodies and perception are explicitly outside this first experiment.
 
-Stage 11 separates padded observation capacity from active communication topology. The actor's
+The neighbor-study workflow separates padded observation capacity from active communication topology. The actor's
 shared neighbor encoder and masked mean live in models; pure adjacency, connectivity, spectral,
 rigidity, and payload calculations live in communication; per-episode selection lives in the
 specialized environment; and fixed-versus-variable multi-seed inference lives in evaluation.

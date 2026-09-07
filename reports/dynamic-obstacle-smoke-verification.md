@@ -1,4 +1,4 @@
-# Stage 10 obstacle smoke verification
+# Dynamic-obstacle smoke verification
 
 The bounded end-to-end protocol completed after the static placement band was widened from 0.12 m to
 0.4 m. The original band produced infeasible two-sphere samples for some seeds. Whole-field restart

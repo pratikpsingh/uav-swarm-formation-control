@@ -85,7 +85,9 @@ def validate_teacher(
         raise ValueError("teacher result checksum does not match the supplied checkpoint.")
     model, metadata = load_mappo_checkpoint(checkpoint, device="cpu")
     if model.neighbor_encoder is None:
-        raise ValueError("Stage 12 requires a Stage 11 masked-neighbor teacher.")
+        raise ValueError(
+            "policy-compression requires a masked-neighbor teacher from the neighbor study."
+        )
     if metadata.get("manifest_fingerprint") != result.get("manifest_fingerprint"):
         raise ValueError("teacher checkpoint and result have different manifest fingerprints.")
     if metadata.get("training_seed") != result.get("training_seed"):
@@ -291,7 +293,7 @@ def run_deployment_study(
     directory.mkdir(parents=True, exist_ok=False)
     manifest: dict[str, object] = {
         "artifact_schema_version": 1,
-        "method": "stage12-validated-teacher-policy-compression",
+        "method": "validated-policy-compression",
         "task_configuration": asdict(task),
         "deployment_configuration": asdict(study),
         "teacher_validation": validation,

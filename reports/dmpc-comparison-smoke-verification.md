@@ -1,9 +1,9 @@
-# Stage 8 DMPC comparison pipeline verification
+# DMPC comparison pipeline verification
 
 Date: 2026-09-06. This report records a bounded software smoke test, not scientific controller
 performance. DMPC method: `dmpc-swarm-clean-room-adaptation`. Exact native execution: false.
 
-The final-source smoke run evaluated the clean-room DMPC adapter and newly trained Stage 7 MAPPO
+The final-source smoke run evaluated the clean-room DMPC adapter and newly trained feed-forward MAPPO
 smoke policies on the same 3-, 4-, and 5-UAV PyBullet tasks. Each MAPPO row aggregates five
 independent 256-transition training runs; each policy used the same two held-out evaluation
 episodes. DMPC used those two episode seeds directly, with no training. All evaluations used a
@@ -31,9 +31,9 @@ under-trained. The numbers above only demonstrate that configuration, physics, s
 dispatch, metric collection, solver diagnostics, provenance and compatibility checks complete.
 They do not rank the methods, establish convergence or reproduce either source paper.
 
-Generated records are under ignored
-`artifacts/baselines/stage8-verification-final/smoke/paper04-{3,4,5}uav/`. Each task contains the
+Generated records predate the naming refactor and remain under the ignored legacy path
+`artifacts/baselines/stage8-verification-final/smoke/paper04-{3,4,5}uav/`. They are not renamed because their manifests preserve the executed identities. Each task contains the
 MAPPO summary, DMPC manifest/source snapshot/result and `controller-comparison.json`. Research
-follow-up requires the Stage 7 full-budget policies and full 20-episode DMPC evaluation under the
+follow-up requires the full-budget MAPPO policies and full 20-episode DMPC evaluation under the
 research profile, followed by trajectory review and an analysis whose sampling units remain
 explicit.

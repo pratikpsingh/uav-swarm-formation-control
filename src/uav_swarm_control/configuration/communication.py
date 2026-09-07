@@ -1,4 +1,4 @@
-"""Strict configuration for the Stage 11 neighbor-topology study."""
+"""Strict configuration for the neighbor-topology study."""
 
 import math
 import re
@@ -94,14 +94,14 @@ class CommunicationExperimentConfig:
         capacity = experiment.formation.num_agents - 1
         if experiment.observation.max_neighbors != capacity:
             raise ConfigurationError(
-                "Stage 11 observation capacity must include every other agent."
+                "neighbor study observation capacity must include every other agent."
             )
         if experiment.observation.neighbor_radius_m is not None:
             raise ConfigurationError(
-                "Stage 11 applies sensing range per condition, not in the base observation."
+                "neighbor study applies sensing range per condition, not in the base observation."
             )
         if not self.evaluation_conditions:
-            raise ConfigurationError("Stage 11 requires evaluation conditions.")
+            raise ConfigurationError("neighbor study requires evaluation conditions.")
         names = [condition.name for condition in self.evaluation_conditions]
         factors = [
             (
@@ -122,7 +122,7 @@ class CommunicationExperimentConfig:
         obstacles = {condition.obstacle_scenario for condition in self.evaluation_conditions}
         if len(counts) < 3 or len(radii) < 2 or len(obstacles) < 2:
             raise ConfigurationError(
-                "Stage 11 must vary neighbor count, sensing range, and obstacle condition."
+                "neighbor study must vary neighbor count, sensing range, and obstacle condition."
             )
         regimen_names = [regimen.name for regimen in self.training_regimens]
         fixed = [
@@ -137,7 +137,7 @@ class CommunicationExperimentConfig:
         ]
         if len(set(regimen_names)) != len(regimen_names) or len(fixed) < 2 or len(variable) != 1:
             raise ConfigurationError(
-                "Stage 11 requires unique names, at least two fixed regimens, and one variable."
+                "Neighbor study requires unique names, two fixed regimens, and one variable."
             )
         known = set(self.evaluation_conditions)
         if any(
@@ -164,7 +164,7 @@ class CommunicationExperimentConfig:
         if self.profile not in {"smoke", "research"}:
             raise ConfigurationError("protocol.profile must be smoke or research.")
         if experiment.reward.smoothness_weight or experiment.reward.success_bonus:
-            raise ConfigurationError("Stage 11 retains the corrected Paper 04 reward definition.")
+            raise ConfigurationError("neighbor study retains the baseline reward definition.")
         template = create_formation(
             experiment.formation.kind,
             experiment.formation.num_agents,
@@ -360,7 +360,7 @@ def communication_experiment_config_from_mapping(value: object) -> Communication
 
 
 def load_communication_experiment_config(path: str | Path) -> CommunicationExperimentConfig:
-    """Safely load one self-contained Stage 11 experiment."""
+    """Safely load one self-contained neighbor study experiment."""
     config_path = Path(path)
     if config_path.suffix not in {".yaml", ".yml"}:
         raise ConfigurationError("communication configuration must use .yaml or .yml.")

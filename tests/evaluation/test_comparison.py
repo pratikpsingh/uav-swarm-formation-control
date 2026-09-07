@@ -68,7 +68,7 @@ def test_comparison_rejects_different_environment_protocols(tmp_path: Path) -> N
 
 
 def test_smoke_profiles_have_identical_comparison_protocols() -> None:
-    config = load_baseline_config(ROOT / "configs/experiment/paper04_3uav.yaml")
+    config = load_baseline_config(ROOT / "configs/experiment/baseline/triangle-3-uav.yaml")
     assert comparison_protocol(smoke_config(config)) == comparison_protocol(
         dmpc_smoke_config(config)
     )

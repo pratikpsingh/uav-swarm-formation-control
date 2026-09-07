@@ -1,4 +1,4 @@
-"""Validation tests for the Stage 11 topology protocol."""
+"""Validation tests for the neighbor study topology protocol."""
 
 from pathlib import Path
 from typing import cast
@@ -15,8 +15,8 @@ from uav_swarm_control.evaluation.communication import student_t_critical_95
 
 ROOT = Path(__file__).parents[2]
 CONFIGS = (
-    ROOT / "configs/experiment/stage11_plane_4uav.yaml",
-    ROOT / "configs/experiment/stage11_pyramid_5uav.yaml",
+    ROOT / "configs/experiment/neighbor-study/plane-4-uav.yaml",
+    ROOT / "configs/experiment/neighbor-study/pyramid-5-uav.yaml",
 )
 
 

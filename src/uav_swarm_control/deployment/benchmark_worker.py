@@ -14,7 +14,7 @@ from uav_swarm_control.deployment.contracts import DeploymentArchitecture
 
 
 def _peak_rss_bytes() -> int:
-    # Linux reports ru_maxrss in KiB. Stage 12 records its platform explicitly.
+    # Linux reports ru_maxrss in KiB; the benchmark records its platform explicitly.
     return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) * 1024
 
 

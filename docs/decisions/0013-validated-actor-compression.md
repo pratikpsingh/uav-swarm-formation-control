@@ -14,7 +14,7 @@ risk because hidden state can leak across episodes or be omitted from the deploy
 
 ## Decision
 
-A research compression run must cryptographically bind a Stage 11 checkpoint to matching evaluation
+A research compression run must cryptographically bind a neighbor-study checkpoint to matching evaluation
 evidence and resolved configuration, then pass predeclared behavioral gates. Smoke runs are always
 non-scientific. Only the deterministic decentralized actor is exported. The actor preserves masked
 permutation-invariant neighbor aggregation. Feed-forward, GRU, and LSTM students use complete-episode

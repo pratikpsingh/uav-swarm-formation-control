@@ -241,7 +241,7 @@ def test_cli_validates_and_runs_generalization_smoke(
         [
             "run-generalization",
             "--config",
-            str(root / "configs/experiment/stage9_plane_4uav.yaml"),
+            str(root / "configs/experiment/pose-generalization/plane-4-uav.yaml"),
             "--smoke",
             "--resume",
             "--output",
@@ -287,7 +287,7 @@ def test_cli_validates_and_runs_obstacle_smoke(
         [
             "run-obstacle-study",
             "--config",
-            str(root / "configs/experiment/stage10_dynamic_obstacles_4uav.yaml"),
+            str(root / "configs/experiment/obstacle-avoidance/plane-4-uav.yaml"),
             "--smoke",
             "--resume",
             "--output",
@@ -335,7 +335,7 @@ def test_cli_validates_and_runs_communication_smoke(
         [
             "run-communication-study",
             "--config",
-            str(root / "configs/experiment/stage11_plane_4uav.yaml"),
+            str(root / "configs/experiment/neighbor-study/plane-4-uav.yaml"),
             "--smoke",
             "--resume",
             "--output",
@@ -384,9 +384,9 @@ def test_cli_applies_bounded_deployment_smoke_profile(
         [
             "run-deployment-study",
             "--task",
-            str(root / "configs/experiment/stage11_plane_4uav.yaml"),
+            str(root / "configs/experiment/neighbor-study/plane-4-uav.yaml"),
             "--deployment",
-            str(root / "configs/deployment/stage12_policy_compression.yaml"),
+            str(root / "configs/deployment/policy-compression.yaml"),
             "--teacher-checkpoint",
             str(tmp_path / "model.pt"),
             "--teacher-result",

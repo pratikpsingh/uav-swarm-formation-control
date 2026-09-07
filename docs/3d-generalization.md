@@ -1,12 +1,11 @@
 # Held-out 3D formation generalization
 
-Stage 9 asks a sharper question than “can the code rotate a template?”:
+The pose-generalization study asks a sharper question than “can the code rotate a template?”:
 
 > After training on one range of target translations, orientations, and scales, can the same local
 > actor control fresh episodes in a deliberately disjoint pose range?
 
-The implemented method is `stage9-3d-generalized-feedforward-mappo`. It retains the corrected Stage 7
-feed-forward MAPPO reward, Crazyflie physics, local actors, and centralized training critic. It is a
+The implemented method is `pose-generalization-mappo`. It retains the corrected feed-forward MAPPO baseline reward, Crazyflie physics, local actors, and centralized training critic. It is a
 controlled extension, not a claim that Paper 04 studied arbitrary 3D target poses.
 
 ## Geometry and episode construction
@@ -40,7 +39,7 @@ policy that is invariant to target permutations.
 
 ## World and target coordinate frames
 
-The world variant retains Stage 7 inputs. The target variant changes vector coordinates:
+The world-frame variant retains the baseline inputs. The target variant changes vector coordinates:
 
 ```text
 v_target = v_world R
@@ -59,10 +58,10 @@ world component bounds, actions are clipped and `action_frame_clip_fraction` is 
 
 | Configuration | UAVs | Shape | Variants |
 | --- | ---: | --- | --- |
-| `stage9_plane_4uav.yaml` | 4 | plane | minimum-distance + target frame |
-| `stage9_pyramid_5uav.yaml` | 5 | pyramid | minimum-distance + target frame |
-| `stage9_cube_8uav.yaml` | 8 | cube | fixed/minimum-distance x world/target |
-| `stage9_sphere_8uav.yaml` | 8 | sphere | minimum-distance + target frame |
+| `pose-generalization/plane-4-uav.yaml` | 4 | plane | minimum-distance + target frame |
+| `pose-generalization/pyramid-5-uav.yaml` | 5 | pyramid | minimum-distance + target frame |
+| `pose-generalization/cube-8-uav.yaml` | 8 | cube | fixed/minimum-distance x world/target |
+| `pose-generalization/sphere-8-uav.yaml` | 8 | sphere | minimum-distance + target frame |
 
 Cube carries the factorial ablation so assignment and frame effects can be isolated. Every variant
 uses training roots 11, 22, 33, 44, 55 and a separate evaluation root. Each policy sees fresh
@@ -79,10 +78,10 @@ Absolute values and gaps must be read together. Pose and assignment metadata acc
 
 ```bash
 uv run uav-swarm-control run-generalization \
-  --config configs/experiment/stage9_plane_4uav.yaml \
-  --config configs/experiment/stage9_pyramid_5uav.yaml \
-  --config configs/experiment/stage9_cube_8uav.yaml \
-  --config configs/experiment/stage9_sphere_8uav.yaml \
+  --config configs/experiment/pose-generalization/plane-4-uav.yaml \
+  --config configs/experiment/pose-generalization/pyramid-5-uav.yaml \
+  --config configs/experiment/pose-generalization/cube-8-uav.yaml \
+  --config configs/experiment/pose-generalization/sphere-8-uav.yaml \
   --smoke --output artifacts/generalization/check --project-root .
 ```
 

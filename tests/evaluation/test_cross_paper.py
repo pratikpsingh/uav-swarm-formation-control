@@ -1,4 +1,4 @@
-"""Tests for two-track Stage 13 report normalization."""
+"""Tests for two-track cross-paper comparison report normalization."""
 
 import hashlib
 import json

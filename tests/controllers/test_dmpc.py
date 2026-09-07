@@ -15,7 +15,7 @@ from uav_swarm_control.controllers.dmpc import (
 from uav_swarm_control.observations import CentralizedState, LocalObservations
 
 ROOT = Path(__file__).parents[2]
-CONFIG = ROOT / "configs/algorithm/dmpc_native.yaml"
+CONFIG = ROOT / "configs/algorithm/dmpc.yaml"
 
 
 def test_triple_integrator_matches_constant_jerk_equations() -> None:

@@ -20,7 +20,7 @@ from uav_swarm_control.environments.contracts import NormalizedVelocityActions
 from uav_swarm_control.environments.drone_backend import RigidBodyState, SimulatorMetadataValue
 from uav_swarm_control.obstacles import ObstacleScenario
 
-CONFIG = Path(__file__).parents[2] / "configs/experiment/stage11_plane_4uav.yaml"
+CONFIG = Path(__file__).parents[2] / "configs/experiment/neighbor-study/plane-4-uav.yaml"
 
 
 def _state(positions: Float32Array, velocities: Float32Array | None = None) -> RigidBodyState:

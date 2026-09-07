@@ -1,10 +1,10 @@
-# Cube also carries the 2x2 assignment/frame ablation for Stage 9.
+# Three-dimensional pose-generalization task; smoke mode is plumbing only.
 schema_version: 1
-name: stage9-cube-8uav
+name: pose-generalization-plane-4-uav
 seed: 11
 formation:
-  kind: cube
-  num_agents: 8
+  kind: plane
+  num_agents: 4
   spacing_m: 0.6
   center_m: [0.0, 0.0, 2.0]
   euler_radians: [0.0, 0.0, 0.0]
@@ -13,7 +13,7 @@ environment:
   max_episode_steps: 360
   max_velocity_component_mps: 0.5
 observation:
-  max_neighbors: 7
+  max_neighbors: 3
   neighbor_radius_m: null
 task:
   initial_center_m: [-1.2, 0.0, 1.5]
@@ -72,15 +72,6 @@ generalization:
     scale_lower: 1.2
     scale_upper: 1.35
   variants:
-    - name: fixed-world
-      assignment: fixed
-      coordinate_frame: world
-    - name: minimum-world
-      assignment: minimum-distance
-      coordinate_frame: world
-    - name: fixed-target
-      assignment: fixed
-      coordinate_frame: target
     - name: minimum-target
       assignment: minimum-distance
       coordinate_frame: target

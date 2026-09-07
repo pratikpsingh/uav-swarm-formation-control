@@ -1,5 +1,5 @@
 schema_version: 1
-name: stage13-cross-paper-comparison
+name: cross-paper-comparison
 
 # Paths are resolved below --evidence-root (normally the parent of this repository).
 sources:
@@ -100,7 +100,7 @@ native_systems:
       source: 'paper01: Abstract, Figures 4-8, and Supplement IV (PDF pp. 1, 6-9, 12-13)'
     comparability_note: >-
       Direct-thrust dynamics, task mixture, reward, and metrics differ from every controlled
-      Stage 13 artifact; use this row only to understand native capability and compute scale.
+      cross-paper report; use this row only to understand native capability and compute scale.
 
   - id: paper02-quadswarm-obstacles
     label: Paper 02 obstacle-aware QuadSwarm IPPO
@@ -157,7 +157,7 @@ native_systems:
       source: 'paper02: Table I (PDF p. 5)'
     comparability_note: >-
       The native task uses static obstacles, direct thrust, SDF sensing, and agent-level success;
-      do not compare these numbers with Stage 10 dynamic-obstacle or Paper 04 velocity-control results.
+      do not compare these numbers with this project's dynamic-obstacle or Paper 04 velocity-control results.
 
   - id: paper03-omnidrones
     label: Paper 03 OmniDrones two-stage MAPPO
@@ -323,11 +323,11 @@ native_systems:
       value: No generated native result artifact is accepted into this catalog
       source: 'dmpc-readme: repository overview contains setup but no reviewed result table'
     comparability_note: >-
-      This is source-level native context, not a reproduced result. The Stage 8 clean-room DMPC
+      This is source-level native context, not a reproduced result. The clean-room DMPC
       adaptation is compared numerically only inside the guarded common-environment track.
 
 controlled_methods:
-  - id: corrected-paper04-feedforward-mappo
+  - id: feedforward-mappo-baseline
     label: Corrected Paper 04 feed-forward MAPPO
     action_semantics: Normalized world-frame velocity components, scaled to m/s and tracked by PID
     observation_access: Local assigned-target error, own velocity, neighbor relative states, and masks
@@ -339,9 +339,9 @@ controlled_methods:
     execution: One optimization per UAV from a synchronous shared snapshot
 
 expected_tasks:
-  - paper04-3uav
-  - paper04-4uav
-  - paper04-5uav
+  - baseline-triangle-3-uav
+  - baseline-square-4-uav
+  - baseline-pentagon-5-uav
 
 metrics:
   - collision_free_success

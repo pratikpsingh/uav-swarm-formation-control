@@ -17,7 +17,7 @@ from uav_swarm_control.environments.drone_backend import RigidBodyState, Simulat
 from uav_swarm_control.environments.obstacles import ObstacleFormationEnvironment
 from uav_swarm_control.obstacles import ObstacleField, ObstacleScenario
 
-CONFIG = Path(__file__).parents[2] / "configs/experiment/stage10_dynamic_obstacles_4uav.yaml"
+CONFIG = Path(__file__).parents[2] / "configs/experiment/obstacle-avoidance/plane-4-uav.yaml"
 
 
 def _state(positions: Float32Array, velocities: Float32Array | None = None) -> RigidBodyState:

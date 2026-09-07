@@ -1,4 +1,4 @@
-"""Reproducible multi-seed training and held-out evaluation for Stage 9."""
+"""Reproducible multi-seed training and held-out evaluation for pose-generalization study."""
 
 import hashlib
 import json
@@ -99,7 +99,7 @@ def run_generalization(
     directory = output / config.profile / experiment.name
     manifest: dict[str, object] = {
         "artifact_schema_version": 1,
-        "method": "stage9-3d-generalized-feedforward-mappo",
+        "method": "pose-generalization-mappo",
         "configuration": asdict(config),
         "provenance": collect_provenance(project_root),
         "split_semantics": {

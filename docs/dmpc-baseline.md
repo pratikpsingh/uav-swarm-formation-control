@@ -57,7 +57,7 @@ episode or being silently called success.
 
 ## What is fair—and what is not
 
-MAPPO and DMPC share the Stage 7 `Paper04Environment`, task YAML, initial-state seeds, CF2X physics,
+MAPPO and DMPC share the `FormationProgressEnvironment`, task YAML, initial-state seeds, CF2X physics,
 30/240 Hz timing, action scaling, episode horizon, termination rules, and trajectory metrics. A
 comparison fingerprint covers the full physics configuration, evaluation root seed, episode count,
 horizon, and metric-schema version. `compare-controllers` refuses different fingerprints.
@@ -66,7 +66,7 @@ The information sets are intentionally different. The deployed MAPPO actor recei
 local observation. This DMPC adapter receives shared positions, velocities, assigned targets and
 stable agent identities so it can model neighbor trajectories. The current comparison therefore
 answers “how do these controllers perform on the same physical task?” It does not answer “which
-method is better under equal communication bandwidth?” Stage 11 must make communication access,
+method is better under equal communication bandwidth?” The neighbor study must make communication access,
 delay, loss and bytes explicit before that claim is possible.
 
 Common task metrics are kept separate from controller internals. Common metrics include success,
@@ -91,10 +91,10 @@ Run the bounded compatible smoke profile:
 
 ```bash
 uv run uav-swarm-control run-dmpc \
-  --task configs/experiment/paper04_3uav.yaml \
-  --task configs/experiment/paper04_4uav.yaml \
-  --task configs/experiment/paper04_5uav.yaml \
-  --controller configs/algorithm/dmpc_native.yaml \
+  --task configs/experiment/baseline/triangle-3-uav.yaml \
+  --task configs/experiment/baseline/square-4-uav.yaml \
+  --task configs/experiment/baseline/pentagon-5-uav.yaml \
+  --controller configs/algorithm/dmpc.yaml \
   --smoke \
   --output artifacts/baselines/dmpc-check \
   --project-root .
@@ -108,9 +108,9 @@ After producing a MAPPO summary under the same profile, create a guarded compari
 
 ```bash
 uv run uav-swarm-control compare-controllers \
-  --mappo-summary artifacts/baselines/paper04-v1/research/paper04-3uav/summary.json \
-  --dmpc-result artifacts/baselines/dmpc-v1/research/paper04-3uav/dmpc-swarm-reference/result.json \
-  --output artifacts/baselines/comparisons/paper04-3uav.json
+  --mappo-summary artifacts/baselines/mappo-baseline-v1/research/baseline-triangle-3-uav/summary.json \
+  --dmpc-result artifacts/baselines/dmpc-v1/research/baseline-triangle-3-uav/dmpc-swarm-reference/result.json \
+  --output artifacts/baselines/comparisons/baseline-triangle-3-uav.json
 ```
 
 Use different output roots for smoke and research work. Existing DMPC result directories and

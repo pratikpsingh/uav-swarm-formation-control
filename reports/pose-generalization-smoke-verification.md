@@ -1,7 +1,6 @@
-# Stage 9 3D generalization smoke verification
+# Three-dimensional pose-generalization smoke verification
 
-Date: 2026-09-06. Profile: `smoke`. Method:
-`stage9-3d-generalized-feedforward-mappo`.
+Date: 2026-09-06. Profile: `smoke`. Current method identity: `pose-generalization-mappo`. The preserved smoke bundle records its pre-refactor experiment paths.
 
 The final-source physical smoke suite completed for plane, pyramid, cube, and sphere. It exercised
 seven assignment/frame variants, five independent training seeds per variant, and two fresh episodes
@@ -27,8 +26,8 @@ Summed measured training and evaluation wall times were 176.43 and 128.47 second
 Artifacts share source hash
 `37a10f3a662b2f866adb9ece6e17ff6130cea3ce666170ae946522f09196112e`, Python 3.12.3,
 Torch 2.14.0+cu130, NumPy 2.5.2, PyBullet 3.2.7, SciPy 1.18.1, and one Torch CPU thread. The recorded
-Git revision is the committed Stage 8 parent `a604e4176ab741d55384c10429aef19bde1fd9e7`; `git_dirty` is
-true because Stage 9 had not yet been committed. Exact source files are stored in each ignored
+Git revision is the committed DMPC-baseline parent `a604e4176ab741d55384c10429aef19bde1fd9e7`; `git_dirty` is
+true because the pose-generalization changes had not yet been committed. Exact source files are stored in each ignored
 artifact snapshot. Gymnasium emitted its known Box float64-to-float32 precision-cast warnings.
 
 Repository verification passed Ruff formatting and lint, Pyright with zero errors, `uv lock

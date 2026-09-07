@@ -1,8 +1,8 @@
 # Oracle dynamic-obstacle protocol
 
-Stage 10 isolates one question: does a staged obstacle curriculum improve collision-free formation
+The dynamic-obstacle study isolates one question: does a staged obstacle curriculum improve collision-free formation
 flight compared with training on no obstacles or static obstacles? It fixes the swarm to four UAVs,
-the plane formation, all-neighbor sensing, the selected Stage 9 assignment/frame variant, physics,
+the plane formation, all-neighbor sensing, the selected target-frame assignment variant, physics,
 reward, optimizer, budget, and seed protocol. Neighbor count and model compression do not vary here.
 
 ## Obstacle model
@@ -41,11 +41,11 @@ The critic is still absent during decentralized evaluation.
 
 ## Reward and termination
 
-The corrected Paper 04 progress/formation/UAV-collision reward is retained. Per agent, Stage 10 adds:
+The corrected Paper 04 progress/formation/UAV-collision reward is retained. Per agent, the obstacle study adds:
 
 ```text
 q_i = clip((safety_margin - nearest_clearance_i) / safety_margin, 0, 1)
-r_i = r_paper04_i - proximity_weight q_i^2 - collision_penalty collision_i
+r_i = r_base_i - proximity_weight q_i^2 - collision_penalty collision_i
 ```
 
 The smooth proximity term supplies learning signal before contact. Sphere overlap terminates the
@@ -78,7 +78,7 @@ Validate the complete design with a bounded run:
 
 ```bash
 uv run uav-swarm-control run-obstacle-study \
-  --config configs/experiment/stage10_dynamic_obstacles_4uav.yaml \
+  --config configs/experiment/obstacle-avoidance/plane-4-uav.yaml \
   --smoke \
   --output artifacts/obstacles/check \
   --project-root .
@@ -88,7 +88,7 @@ Run the frozen research budget on the lab machine by omitting `--smoke`:
 
 ```bash
 uv run uav-swarm-control run-obstacle-study \
-  --config configs/experiment/stage10_dynamic_obstacles_4uav.yaml \
+  --config configs/experiment/obstacle-avoidance/plane-4-uav.yaml \
   --output artifacts/obstacles/research \
   --project-root .
 ```

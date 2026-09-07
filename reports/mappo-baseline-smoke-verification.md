@@ -1,7 +1,7 @@
-# Corrected Paper 04 pipeline verification
+# Feed-forward MAPPO baseline pipeline verification
 
 Date: 2026-09-06. This report records a bounded software smoke test, not convergence results.
-Method: corrected-paper04-feedforward-mappo. Exact paper reproduction: false.
+Current method identity: `feedforward-mappo-baseline`. The preserved smoke bundle predates the naming refactor and records the legacy identifier `corrected-paper04-feedforward-mappo`. Exact Paper 04 reproduction: false.
 
 Software checks: Ruff formatting and lint passed; Pyright reported no errors; the full regression
 suite completed with 179 passed, 8 warnings, and 89% overall coverage (515.36 seconds). The warnings
@@ -12,7 +12,7 @@ bitwise reproducibility across different hardware or simulator versions.
 
 All three tasks completed five independent 256-transition training runs, saved checkpoints,
 reloaded the final policies, and evaluated two common held-out episodes per policy. The evaluation
-horizon was 48 control steps. Training and inference used CPU; physics used the pinned Stage 6
+horizon was 48 control steps. Training and inference used CPU; physics used the pinned Crazyflie
 simulator, CF2X, all configured aerodynamic effects, 240 Hz physics and 30 Hz control.
 
 | UAVs | Training seeds | Transitions per seed | Agent samples per seed | Success rate | Mean final normalized shape RMSE |
@@ -32,7 +32,7 @@ minimum clearance. This establishes task feasibility under a known controller; i
 that a 256-step learned policy has converged. The diagnostic record is
 `artifacts/baselines/verification/scripted-research-settings.json`.
 
-Generated records are in ignored `artifacts/baselines/verification/smoke/paper04-{3,4,5}uav/`.
+Generated records predate the naming refactor and remain in the ignored legacy path `artifacts/baselines/verification/smoke/paper04-{3,4,5}uav/`. They are not renamed because their manifests record the original experiment identities.
 Each folder contains exact source hashes/snapshot, configuration, simulator provenance, per-seed
 updates, checkpoints, individual episode metrics and a summary. Source was uncommitted during
 verification, based on commit `4d4c95d`; `source.zip` and hashes identify the actual executed code.

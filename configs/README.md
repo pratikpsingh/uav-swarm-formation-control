@@ -42,19 +42,19 @@ The PyBullet smoke gates are [one-drone hover](experiment/pybullet_hover.yaml) a
 the reciprocal of the controller frequency, while the physics frequency must be an integer multiple
 of that rate.
 
-The `paper04_3uav.yaml`, `paper04_4uav.yaml`, and `paper04_5uav.yaml` experiments combine the
+The `experiment/baseline/triangle-3-uav.yaml`, `experiment/baseline/square-4-uav.yaml`, and `experiment/baseline/pentagon-5-uav.yaml` experiments combine the
 MAPPO and PyBullet schemas with a strict `protocol` section containing five independent training
 seeds, an evaluation seed, and a profile label. Use `run-baseline --smoke` for a bounded local
-check; the unmodified research budgets are large. See [the baseline protocol](../docs/paper04-baseline.md).
+check; the unmodified research budgets are large. See [the baseline protocol](../docs/mappo-baseline.md).
 
 The classical controller is configured independently in
-[algorithm/dmpc_native.yaml](algorithm/dmpc_native.yaml). It exposes every horizon, planning-rate,
+[algorithm/dmpc.yaml](algorithm/dmpc.yaml). It exposes every horizon, planning-rate,
 cost, physical-limit and solver-tolerance choice and rejects missing or unknown keys. `run-dmpc`
-composes that controller configuration with one or more Paper 04 task files at runtime. This keeps
+composes that controller configuration with one or more baseline task files at runtime. This keeps
 the environment protocol identical while preventing controller settings from being duplicated in
 each 3/4/5-UAV task. See [the DMPC protocol](../docs/dmpc-baseline.md).
 
-The four `stage9_*` experiment files define plane, pyramid, cube, and sphere generalization tasks.
+The four files under `experiment/pose-generalization/` define plane, pyramid, cube, and sphere generalization tasks.
 Each contains two non-overlapping seven-dimensional target-pose boxes: three translation offsets,
 three Euler-angle offsets, and one positive scale. They also declare assignment and coordinate-frame
 variants, five independent training seeds, and a separate evaluation root seed. The cube task carries
@@ -63,26 +63,26 @@ variant. The source configurations are research budgets. `run-generalization --s
 explicit bounded copy without changing the source YAML. See
 [the 3D generalization protocol](../docs/3d-generalization.md).
 
-`stage10_dynamic_obstacles_4uav.yaml` freezes the four-UAV controlled obstacle study. It declares
+`experiment/obstacle-avoidance/plane-4-uav.yaml` freezes the four-UAV controlled obstacle study. It declares
 the oracle sphere distribution, sensing and safety bounds, one fixed pose range and representation,
 three equal-budget training regimens, all four matched evaluation scenarios, and five training
 seeds. `run-obstacle-study --smoke` reduces only runtime-related values. See
 [the dynamic-obstacle protocol](../docs/dynamic-obstacles.md).
 
-The two stage11 experiment files freeze the four-UAV plane and five-UAV pyramid communication
+The two files under `experiment/neighbor-study/` freeze the four-UAV plane and five-UAV pyramid communication
 studies. Each crosses requested neighbor count, finite/unlimited sensing, and clear/mixed-dynamic
 obstacles; defines fixed-two, fixed-all, and variable-topology training distributions; retains five
 independent training seeds; and fixes a 24-byte relative-state payload model. Use the
 run-communication-study command with its smoke option for bounded plumbing validation. See
 [the neighbor protocol](../docs/communication-study.md).
 
-`deployment/stage12_policy_compression.yaml` declares the teacher acceptance gates, three
+`deployment/policy-compression.yaml` declares the teacher acceptance gates, three
 feed-forward widths, GRU/LSTM comparison, structured-pruning and INT8 treatments, five
 distillation seeds, episode-level dataset split, host benchmark protocol, and energy measurement
-status. The deployment config is composed with exactly one Stage 11 task and matching teacher
+status. The deployment config is composed with exactly one neighbor-study task and matching teacher
 checkpoint/result pair at runtime. See [the compression protocol](../docs/policy-compression.md).
 
-`comparison/stage13_cross_paper.yaml` is a strict, checksum-backed evidence catalog for Papers 01-04
+`comparison/cross-paper.yaml` is a strict, checksum-backed evidence catalog for Papers 01-04
 and native DMPC plus the contract for normalized common-environment result tables. Missing simulator,
 seed, or uncertainty evidence is represented explicitly instead of inferred. See
 [the cross-paper protocol](../docs/cross-paper-comparison.md).

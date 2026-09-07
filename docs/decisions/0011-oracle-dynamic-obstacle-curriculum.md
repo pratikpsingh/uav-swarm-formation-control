@@ -18,7 +18,7 @@ trained on no obstacles and static obstacles.
 - Pad actor and centralized-critic inputs to one configured maximum in every scenario.
 - Train equal-budget no-obstacle, static-obstacle, and staged-curriculum regimens.
 - Progress the curriculum from none to static, slow dynamic, and mixed dynamic at episode resets.
-- Fix the four-UAV plane, all-neighbor sensing, Stage 9 target-frame variant, and all other protocol
+- Fix the four-UAV plane, all-neighbor sensing, selected target-frame variant, and all other protocol
   choices while obstacle training distribution varies.
 - Evaluate every policy on all four scenarios using matched episode seeds and paired seed differences.
 - Treat sampled sphere overlap as terminal failure and report reward-independent safety/task metrics.

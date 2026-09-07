@@ -1,6 +1,6 @@
-# Stage 13 cross-paper smoke verification
+# Cross-paper report smoke verification
 
-The Stage 13 report builder was exercised on the three existing guarded smoke comparisons for the
+The cross-paper report builder was exercised on the three existing guarded smoke comparisons for the
 3-, 4-, and 5-UAV Paper 04 tasks. This run reused saved artifacts and performed no training.
 
 The generated bundle contained six controlled rows, five native-system rows, ten checksum-verified
@@ -13,7 +13,7 @@ The readiness gate correctly returned `false` because all three inputs had profi
 associated standard deviations are plumbing evidence only. They must not be used to rank MAPPO and
 DMPC or support a scientific claim.
 
-Command used:
+Historical command used before the domain-name refactor (the generated manifest and source snapshot preserve this exact identity):
 
 ```bash
 uv run uav-swarm-control build-cross-paper-report \
@@ -27,5 +27,5 @@ uv run uav-swarm-control build-cross-paper-report \
 ```
 
 The generated artifact directory is ignored by Git. Re-run the same workflow with a new output root
-after full-budget Stage 7 and Stage 8 artifacts are available.
+after full-budget MAPPO and DMPC artifacts are available. Use the current command in `docs/cross-paper-comparison.md`; legacy artifacts are not compatible with the renamed task identities.
 

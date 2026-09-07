@@ -12,7 +12,7 @@ from uav_swarm_control.environments.pybullet import BackendFactory, PyBulletSwar
 from uav_swarm_control.evaluation.kinematics import collision_statistics
 
 
-class Paper04Environment(PyBulletSwarmEnvironment):
+class FormationProgressEnvironment(PyBulletSwarmEnvironment):
     """Use progress reward (Eq. 24) with corrected per-agent formation normalization."""
 
     def __init__(

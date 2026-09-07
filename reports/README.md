@@ -6,6 +6,6 @@ must identify its resolved configuration, random seed, Git revision, dependency 
 simulator version.
 
 Stage-specific smoke reports verify software pipelines and explicitly do not rank methods or establish
-policy convergence. See `stage9-3d-smoke-verification.md` for the 3D generalization plumbing gate.
-See `stage10-obstacle-smoke-verification.md` for the oracle obstacle curriculum plumbing gate.
-See `stage13-cross-paper-smoke-verification.md` for the two-track evidence/reporting plumbing gate.
+policy convergence. See `pose-generalization-smoke-verification.md` for the 3D generalization plumbing gate.
+See `dynamic-obstacle-smoke-verification.md` for the oracle obstacle curriculum plumbing gate.
+See `cross-paper-smoke-verification.md` for the two-track evidence/reporting plumbing gate.

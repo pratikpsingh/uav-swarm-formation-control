@@ -1,4 +1,4 @@
-"""Teacher evidence gate tests for Stage 12."""
+"""Teacher evidence gate tests for policy compression."""
 
 import hashlib
 import json
@@ -16,7 +16,9 @@ from uav_swarm_control.models import NeighborEncoderSpec, SharedActorCentralCrit
 
 
 def _teacher_evidence(tmp_path: Path) -> tuple[Path, Path]:
-    task = load_communication_experiment_config("configs/experiment/stage11_plane_4uav.yaml")
+    task = load_communication_experiment_config(
+        "configs/experiment/neighbor-study/plane-4-uav.yaml"
+    )
     model = SharedActorCentralCritic(
         local_observation_size=40,
         centralized_state_size=80,
@@ -61,8 +63,10 @@ def _teacher_evidence(tmp_path: Path) -> tuple[Path, Path]:
 
 def test_validated_teacher_binds_checkpoint_configuration_and_metrics(tmp_path: Path) -> None:
     checkpoint, result = _teacher_evidence(tmp_path)
-    task = load_communication_experiment_config("configs/experiment/stage11_plane_4uav.yaml")
-    study = load_deployment_study_config("configs/deployment/stage12_policy_compression.yaml")
+    task = load_communication_experiment_config(
+        "configs/experiment/neighbor-study/plane-4-uav.yaml"
+    )
+    study = load_deployment_study_config("configs/deployment/policy-compression.yaml")
     _, validation = validate_teacher(checkpoint, result, task, study)
     assert validation["scientific_valid"] is True
     assert validation["behavioral_gate_passed"] is True
@@ -71,7 +75,9 @@ def test_validated_teacher_binds_checkpoint_configuration_and_metrics(tmp_path: 
 def test_teacher_gate_rejects_tampered_checkpoint(tmp_path: Path) -> None:
     checkpoint, result = _teacher_evidence(tmp_path)
     checkpoint.write_bytes(checkpoint.read_bytes() + b"tampered")
-    task = load_communication_experiment_config("configs/experiment/stage11_plane_4uav.yaml")
-    study = load_deployment_study_config("configs/deployment/stage12_policy_compression.yaml")
+    task = load_communication_experiment_config(
+        "configs/experiment/neighbor-study/plane-4-uav.yaml"
+    )
+    study = load_deployment_study_config("configs/deployment/policy-compression.yaml")
     with pytest.raises(ValueError, match="checksum"):
         validate_teacher(checkpoint, result, task, study)

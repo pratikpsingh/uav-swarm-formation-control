@@ -1,6 +1,6 @@
-# Stage 10 controlled oracle-obstacle study; smoke mode validates plumbing only.
+# Controlled oracle-obstacle study; smoke mode validates plumbing only.
 schema_version: 1
-name: stage10-dynamic-obstacles-4uav
+name: dynamic-obstacle-plane-4-uav
 seed: 11
 formation:
   kind: plane
