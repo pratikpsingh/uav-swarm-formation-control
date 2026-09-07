@@ -6,6 +6,7 @@ They will be grouped by responsibility:
 ```text
 configs/
 ├── algorithm/     Optimizer, network, rollout, and update settings
+├── comparison/    Native evidence catalogs and controlled report contracts
 ├── deployment/    Compression candidates, gates, and measurement protocols
 ├── environment/   Simulator, dynamics, timing, and world settings
 ├── experiment/    Reproducible compositions of the other configuration groups
@@ -80,3 +81,8 @@ feed-forward widths, GRU/LSTM comparison, structured-pruning and INT8 treatments
 distillation seeds, episode-level dataset split, host benchmark protocol, and energy measurement
 status. The deployment config is composed with exactly one Stage 11 task and matching teacher
 checkpoint/result pair at runtime. See [the compression protocol](../docs/policy-compression.md).
+
+`comparison/stage13_cross_paper.yaml` is a strict, checksum-backed evidence catalog for Papers 01-04
+and native DMPC plus the contract for normalized common-environment result tables. Missing simulator,
+seed, or uncertainty evidence is represented explicitly instead of inferred. See
+[the cross-paper protocol](../docs/cross-paper-comparison.md).

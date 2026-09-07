@@ -28,6 +28,10 @@ Stage 11 adds a masked permutation-invariant neighbor encoder and a fixed-versus
 study over planar/spatial formations, requested and actual degree, sensing range, dynamic obstacles,
 connectivity, rigidity, payload bytes, and across-policy confidence intervals. Scientific claims
 remain pending full-budget lab training.
+Stage 12 adds actor-only distillation, architecture/width comparisons, structured pruning, dynamic
+INT8 export, and explicit host/target measurement gates. Stage 13 adds a checksum-backed two-track
+report: guarded common-environment controller results remain separate from paper-native QuadSwarm,
+OmniDrones/Isaac Sim, custom PyBullet, and native DMPC evidence.
 
 See [the formation geometry contract](docs/formations.md) and
 [the multi-agent contract](docs/multi-agent-contracts.md) for the foundational APIs. The
@@ -46,6 +50,8 @@ The [dynamic-obstacle protocol](docs/dynamic-obstacles.md) documents oracle info
 collision semantics, curriculum controls, safety metrics, artifacts, and current limitations.
 The [neighbor and communication protocol](docs/communication-study.md) defines set-invariant actor
 inputs, the factorial design, graph metrics, uncertainty, and the Paper 02 comparison boundary.
+The [cross-paper comparison protocol](docs/cross-paper-comparison.md) defines evidence status,
+compatibility checks, mandatory context columns, provenance, and the research-readiness gate.
 
 ## Requirements
 
@@ -181,6 +187,23 @@ Smoke output validates plumbing only. A research run requires a full-budget teac
 predeclared behavioral gates. Portable actor graphs and host measurements do not establish embedded
 feasibility; repeat flash, peak-RAM, latency, and energy measurements on the target. See
 [the compression protocol](docs/policy-compression.md).
+
+
+Build a two-track Stage 13 report from guarded controller comparisons:
+
+```bash
+uv run uav-swarm-control build-cross-paper-report \
+  --config configs/comparison/stage13_cross_paper.yaml \
+  --comparison artifacts/baselines/<run>/<profile>/paper04-3uav/controller-comparison.json \
+  --comparison artifacts/baselines/<run>/<profile>/paper04-4uav/controller-comparison.json \
+  --comparison artifacts/baselines/<run>/<profile>/paper04-5uav/controller-comparison.json \
+  --output artifacts/comparison/<report-run> \
+  --project-root . \
+  --evidence-root ..
+```
+
+The report verifies paper/repository checksums and controlled protocol fingerprints. Complete smoke
+inputs still produce `research_ready: false`.
 
 Run all local quality checks:
 

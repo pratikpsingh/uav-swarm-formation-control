@@ -23,6 +23,7 @@ from uav_swarm_control.algorithms.ppo import (
 from uav_swarm_control.configuration import (
     ConfigurationError,
     load_communication_experiment_config,
+    load_cross_paper_config,
     load_deployment_study_config,
     load_dmpc_config,
     load_experiment_config,
@@ -237,6 +238,26 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("--mappo-summary", type=Path, required=True)
     compare.add_argument("--dmpc-result", type=Path, required=True)
     compare.add_argument("--output", type=Path, required=True)
+    cross_paper = commands.add_parser(
+        "build-cross-paper-report",
+        help="build separate controlled and native-system Stage 13 comparison tracks",
+    )
+    cross_paper.add_argument("--config", type=Path, required=True)
+    cross_paper.add_argument(
+        "--comparison",
+        type=Path,
+        action="append",
+        default=[],
+        help="guarded controller-comparison JSON; repeat once per controlled task",
+    )
+    cross_paper.add_argument("--output", type=Path, default=Path("artifacts/comparison"))
+    cross_paper.add_argument("--project-root", type=Path, default=Path.cwd())
+    cross_paper.add_argument(
+        "--evidence-root",
+        type=Path,
+        default=None,
+        help="root containing papers and supplied repositories (default: project parent)",
+    )
     return parser
 
 
@@ -245,6 +266,28 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
     configure_logging(LogLevel(args.log_level))
+    if args.command == "build-cross-paper-report":
+        try:
+            from uav_swarm_control.evaluation.cross_paper import build_cross_paper_report
+
+            project_root = args.project_root.resolve()
+            evidence_root = (
+                args.evidence_root.resolve()
+                if args.evidence_root is not None
+                else project_root.parent
+            )
+            path = build_cross_paper_report(
+                load_cross_paper_config(args.config),
+                args.config,
+                args.comparison,
+                args.output,
+                project_root=project_root,
+                evidence_root=evidence_root,
+            )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            parser.error(str(error))
+        LOGGER.info("Cross-paper report complete: %s", path)
+        return
     if args.command == "compare-controllers":
         try:
             path = compare_controller_results(

@@ -1,0 +1,353 @@
+schema_version: 1
+name: stage13-cross-paper-comparison
+
+# Paths are resolved below --evidence-root (normally the parent of this repository).
+sources:
+  - id: paper01
+    title: Decentralized Control of Quadrotor Swarms with End-to-end Deep Reinforcement Learning
+    path: papers/01-Decentralized-Control-of-Quadrotor-Swarms.pdf
+    sha256: dc47a90d56c47dc07796e6297040542d882629a90f5d7468258c81c8460e32e7
+  - id: paper02
+    title: Collision Avoidance and Navigation for a Quadrotor Swarm Using End-to-end DRL
+    path: papers/02-Collision -Avoidance-and-Navigation-for-a-Quadrotor-Swarm.pdf
+    sha256: 32addf50ef432615fe942f851f66693408b09ce7f3f1a5a12a60b3968edb909e
+  - id: paper03
+    title: Multi-UAV Formation Control with Static and Dynamic Obstacle Avoidance via RL
+    path: papers/03-Multi-UAV-Formation-Control-with-Static-and-Dynamic-Obstacles.pdf
+    sha256: 731040cb6c576315ddce981ce922aecb9330ebd91ea43fb78ff1fa745f3ea103
+  - id: paper03-repo
+    title: Supplied multi-UAV-formation repository README
+    path: multi-UAV-formation/README.md
+    sha256: 15da188e0a97c0da7ba630d5e77db4a8149acebe859f012d283be03062f50da9
+  - id: paper04
+    title: UAV Distribution Formation Control with Improved PPO Algorithm
+    path: papers/04-UAV-Distribution-Formation-Control-with-Improved-PPO-Algorithm.pdf
+    sha256: 463374e48601a544e28a8315afadd87b5854c30771ebdc000077f7a54dfce024
+  - id: dmpc-readme
+    title: Supplied DMPC-to-MARL-Sim repository README
+    path: DMPC-to-MARL-Sim/README.md
+    sha256: 2d8c56c7c37248da1cf8cbac34cd97649426ca475a2432395a60af63dcdf24cf
+  - id: dmpc-requirements
+    title: Native DMPC Python requirements
+    path: DMPC-to-MARL-Sim/cps_testbed_python/requirements.txt
+    sha256: 26b648e7e93449fb4d2981f54dba81e514cecb017bd600ff4782bab1e64e9d3e
+  - id: dmpc-config
+    title: Native DMPC default experiment configuration
+    path: DMPC-to-MARL-Sim/cps_testbed_python/parameters/dampc.yaml
+    sha256: 7fdc571c35dddf6a8c58272abb5308b821e09bf44d58465f2248e55b44678b69
+  - id: dmpc-simulator
+    title: Native DMPC software-in-the-loop simulator
+    path: DMPC-to-MARL-Sim/cps_testbed_python/simulation/simulator.py
+    sha256: 11b91309d55e55aeb7c5e9f6d4e017c4e677d90cff4ea0561d8bfcaf97ec776b
+  - id: dmpc-caller
+    title: Native DMPC simulation entry point
+    path: DMPC-to-MARL-Sim/cps_testbed_python/dmpc_simulation_caller.py
+    sha256: 9c332fb44d963a642353fb034220815fbaf55e3099c312b0c9b0fb6ea99ab003
+
+native_systems:
+  - id: paper01-quadswarm
+    label: Paper 01 QuadSwarm PPO
+    method_family: independent shared-policy PPO with Deep Sets or attention
+    environment:
+      status: reported
+      value: >-
+        Custom 10 m x 10 m x 10 m 3D QuadSwarm simulator; Crazyflie 2.0 dynamics,
+        motor/sensor noise, randomized collision response, and mixed static/dynamic formations
+      source: 'paper01: Sections 3.2, 4, and Supplement III (PDF pp. 3-6, 12)'
+    simulator_version:
+      status: not-reported
+      value: Simulator release or source revision is not reported in the paper
+      source: 'paper01: Section 3.2 and source-code statement (PDF pp. 3 and 13)'
+    action_semantics:
+      status: reported
+      value: Four continuous policy outputs mapped directly to normalized non-negative motor thrusts
+      source: 'paper01: Section 3.1 (PDF p. 3)'
+    observation_access:
+      status: reported
+      value: >-
+        Local own relative-goal position, velocity, rotation and angular velocity plus K neighbors'
+        relative positions and velocities; no global state during evaluation
+      source: 'paper01: Section 3.1 (PDF p. 3)'
+    training_budget:
+      status: reported
+      value: >-
+        1 billion samples per policy; 144 collectors x 4 environments x 8 UAVs, 200 Hz physics,
+        100 Hz control, and 16-second episodes
+      source: 'paper01: Supplement III (PDF p. 12)'
+    seeds:
+      status: reported
+      value: Four independent random weight initializations; numeric seed values are not listed
+      source: 'paper01: Figure 4 and Supplement III (PDF pp. 6 and 12)'
+    uncertainty:
+      status: reported
+      value: Mean and standard deviation across four independent training runs in architecture curves
+      source: 'paper01: Figure 4 caption (PDF p. 6)'
+    execution:
+      status: reported
+      value: Fully decentralized actor execution using onboard/local observations
+      source: 'paper01: Abstract and Section 3.1 (PDF pp. 1 and 3)'
+    evaluation_protocol:
+      status: reported
+      value: >-
+        Architecture study uses 8 UAVs and K=6; randomized 2D/3D formations and task-specific
+        simulation/physical demonstrations are reported
+      source: 'paper01: Sections 4-4.1 and Supplement IV (PDF pp. 5-6 and 12-13)'
+    native_result:
+      status: reported
+      value: >-
+        Paper reports learning curves and zero-shot physical demonstrations up to 8 UAVs rather
+        than a reusable common-metric scalar result
+      source: 'paper01: Abstract, Figures 4-8, and Supplement IV (PDF pp. 1, 6-9, 12-13)'
+    comparability_note: >-
+      Direct-thrust dynamics, task mixture, reward, and metrics differ from every controlled
+      Stage 13 artifact; use this row only to understand native capability and compute scale.
+
+  - id: paper02-quadswarm-obstacles
+    label: Paper 02 obstacle-aware QuadSwarm IPPO
+    method_family: decentralized independent PPO with attention and collision replay
+    environment:
+      status: reported
+      value: >-
+        QuadSwarm in a 10 m x 10 m x 10 m 3D room with static extruded grid obstacles;
+        base setting is 8 UAVs, 20% obstacle density, and 0.6 m obstacle size
+      source: 'paper02: Sections III-B and IV (PDF pp. 3-4)'
+    simulator_version:
+      status: not-reported
+      value: QuadSwarm release or source revision is not reported in the paper
+      source: 'paper02: Section II and Reference 28 (PDF pp. 2 and 7)'
+    action_semantics:
+      status: reported
+      value: Continuous direct rotor-thrust commands at the low-level controller interface
+      source: 'paper02: Sections II and III-A (PDF pp. 2-3)'
+    observation_access:
+      status: reported
+      value: >-
+        Local own/goal state, K nearest neighbor relative positions and velocities, and local
+        signed-distance-field obstacle samples
+      source: 'paper02: Section III-B (PDF p. 3)'
+    training_budget:
+      status: reported
+      value: Main/base learning curves run to 1 billion environment steps; obstacle-size study to 2 billion
+      source: 'paper02: Figures 3-10 (PDF pp. 4-6)'
+    seeds:
+      status: reported
+      value: Four training seeds; numeric seed values are not listed
+      source: 'paper02: Section IV experimental setup (PDF p. 4)'
+    uncertainty:
+      status: not-reported
+      value: >-
+        Four seeds are stated, but the paper does not specify a confidence interval or identify a
+        tabulated across-seed uncertainty statistic
+      source: 'paper02: Section IV and Tables I-II (PDF pp. 4-6)'
+    execution:
+      status: reported
+      value: Decentralized independent policy execution per UAV from local observations
+      source: 'paper02: Figure 1 and Section III (PDF pp. 2-3)'
+    evaluation_protocol:
+      status: reported
+      value: >-
+        Base study uses 8 UAVs, K=2, 20% density and 0.6 m obstacles; Table II uses 20 episodes;
+        Table I episode count is not stated
+      source: 'paper02: Section IV and Table II discussion (PDF pp. 4 and 6)'
+    native_result:
+      status: reported
+      value: >-
+        Table I reports Ours success 0.97, collision 0.03, 5.3 m flight distance, and 5 ms inference;
+        no uncertainty accompanies these values
+      source: 'paper02: Table I (PDF p. 5)'
+    comparability_note: >-
+      The native task uses static obstacles, direct thrust, SDF sensing, and agent-level success;
+      do not compare these numbers with Stage 10 dynamic-obstacle or Paper 04 velocity-control results.
+
+  - id: paper03-omnidrones
+    label: Paper 03 OmniDrones two-stage MAPPO
+    method_family: MAPPO with reward search, curriculum, and attention
+    environment:
+      status: reported
+      value: >-
+        OmniDrones GPU simulation; 3 UAVs maintain a near-equilateral triangle in 3D while flying
+        through static columns and parabolic dynamic balls
+      source: 'paper03: Sections III-A and VI-A (PDF pp. 3 and 5)'
+    simulator_version:
+      status: measured
+      value: Supplied official repository pins local NVIDIA Isaac Sim 2022.2.0
+      source: 'paper03-repo: Install section; version is repository evidence, not stated in the paper'
+    action_semantics:
+      status: reported
+      value: Collective thrust plus roll, pitch, and yaw body rates, converted to motor thrust by PID
+      source: 'paper03: Section III-C (PDF p. 4)'
+    observation_access:
+      status: reported
+      value: >-
+        Local self state/target velocity and identifier, relative states of other UAVs, a 3x3 static
+        obstacle distance grid, and dynamic-obstacle relative/absolute velocity features
+      source: 'paper03: Section III-B (PDF pp. 3-4)'
+    training_budget:
+      status: reported
+      value: >-
+        100 million steps per reward-search trial plus 15M + 150M + 150M steps for the selected
+        three-period curriculum; number of reward-search trials is not reported
+      source: 'paper03: Section VI-A (PDF p. 5)'
+    seeds:
+      status: not-reported
+      value: Independent training seed count and numeric values are not reported
+      source: 'paper03: Section VI (PDF pp. 5-7)'
+    uncertainty:
+      status: not-reported
+      value: No across-training-seed interval or standard deviation is reported
+      source: 'paper03: Table I and evaluation discussion (PDF pp. 5-6)'
+    execution:
+      status: reported
+      value: Paper claims fully decentralized policy execution; real deployment runs policy offboard
+      source: 'paper03: Sections II-A and VI-D (PDF pp. 2 and 7)'
+    evaluation_protocol:
+      status: reported
+      value: >-
+        Planning baselines average 25 trials and RL methods 100 trials; mixed test uses 10 columns
+        and 2 balls; obstacles are randomly placed each trial
+      source: 'paper03: Section VI-A (PDF pp. 5-6)'
+    native_result:
+      status: reported
+      value: Table I reports Ours CFR 0.89 and formation-maintenance score 0.278 over the native protocol
+      source: 'paper03: Table I (PDF p. 5)'
+    comparability_note: >-
+      CTBR actions, OmniDrones physics, directed-flight objective, Laplacian formation metric, and
+      unequal baseline trial counts prevent direct comparison with the common PyBullet track.
+
+  - id: paper04-custom-pybullet
+    label: Paper 04 MA-LSTM-PPO
+    method_family: recurrent MAPPO with CTDE, normalization, and PopArt
+    environment:
+      status: reported
+      value: >-
+        Custom OpenAI Gym environment on PyBullet with Crazyflie dynamics, collision, drag, and
+        ground effects; Ray/RLlib distributed training for 3, 4, and 5 UAV formations
+      source: 'paper04: Sections 4.1-4.2 (PDF pp. 20-22)'
+    simulator_version:
+      status: not-reported
+      value: PyBullet, Gym, Ray, and RLlib versions are not reported
+      source: 'paper04: Section 4.1 (PDF pp. 20-21)'
+    action_semantics:
+      status: reported
+      value: Desired 3D direction plus speed magnitude, converted to motor PWM by cascaded PID
+      source: 'paper04: Section 3.1.1, Equation 18 (PDF pp. 10-11)'
+    observation_access:
+      status: reported
+      value: >-
+        Actor receives own position, attitude, velocities, rotor speeds, and relative distances to
+        communication-radius neighbors; critic receives joint observations from all UAVs
+      source: 'paper04: Section 3.1.1 and Section 4.2 (PDF pp. 10-11 and 21-22)'
+    training_budget:
+      status: reported
+      value: 10M, 30M, and 60M steps for 3, 4, and 5 UAVs respectively, using 80 Ray workers
+      source: 'paper04: Section 4.2 (PDF pp. 21-22)'
+    seeds:
+      status: not-reported
+      value: Independent training seed count and numeric values are not reported
+      source: 'paper04: Section 4.2-4.3 (PDF pp. 21-25)'
+    uncertainty:
+      status: not-reported
+      value: >-
+        No across-run uncertainty is reported; FS and NS are within-trajectory reward-stability
+        quantities and are not seed uncertainty
+      source: 'paper04: Section 4.3 and Table 4 (PDF pp. 24-25)'
+    execution:
+      status: reported
+      value: Centralized training with decentralized recurrent actor execution
+      source: 'paper04: Abstract and Sections 3.2.1, 4.2 (PDF pp. 1, 14, and 22)'
+    evaluation_protocol:
+      status: not-reported
+      value: >-
+        Episode count and held-out seed protocol are not reported; tables summarize final 20% of
+        steps using reward-derived quantities
+      source: 'paper04: Section 4.3 and Tables 4-5 (PDF pp. 23-27)'
+    native_result:
+      status: reported
+      value: >-
+        Table 5 reports 4-UAV Our model formation error 0.01127 and navigation reward 18.22033;
+        uncertainty and evaluation episode count are absent
+      source: 'paper04: Table 5 (PDF p. 27)'
+    comparability_note: >-
+      Reward-derived metrics, unknown evaluation replication, recurrent architecture, and custom
+      environment make the native values unsuitable for a common numerical leaderboard.
+
+  - id: native-dmpc-swarm
+    label: Native DMPC-Swarm repository
+    method_family: distributed finite-horizon trajectory optimization
+    environment:
+      status: measured
+      value: >-
+        Software-in-the-loop gym-pybullet-drones/PyBullet environment; default config has 10 UAVs,
+        200-second duration, 100000 simulations, and Vicon-style state exchange
+      source: 'dmpc-config: simulation setup and testbed defaults'
+    simulator_version:
+      status: measured
+      value: PyBullet 3.1.7 and Gym 0.26.2 are pinned; vendored gym-pybullet-drones revision is unrecorded
+      source: 'dmpc-requirements: pinned Python dependencies'
+    action_semantics:
+      status: measured
+      value: >-
+        Distributed optimizer produces position/velocity/acceleration trajectory references;
+        DSL PID converts the next reference to four motor RPM commands
+      source: 'dmpc-simulator: control loop and computeControlFromState call'
+    observation_access:
+      status: measured
+      value: >-
+        9D position/velocity/acceleration states plus communicated state, planned trajectories,
+        targets, agent IDs, timing, and optional message-loss information
+      source: 'dmpc-simulator: agent/network construction and 9D state update'
+    training_budget:
+      status: not-applicable
+      value: Classical optimizer has no learned-policy training budget
+      source: 'dmpc-readme: native DMPC software description'
+    seeds:
+      status: measured
+      value: Initializer root is fixed to 10; network stochasticity uses simulation ID; full seed protocol is not documented
+      source: 'dmpc-caller: initializer and simulator setup'
+    uncertainty:
+      status: not-reported
+      value: Repository files do not define a single reviewed across-run uncertainty summary
+      source: 'dmpc-readme: documented run instructions and scope'
+    execution:
+      status: measured
+      value: Distributed optimization across compute units with communicated UAV states and trajectories
+      source: 'dmpc-simulator: compute-unit and time-slotted network construction'
+    evaluation_protocol:
+      status: measured
+      value: >-
+        Defaults request 100000 randomized simulations, 0.4 m planned separation, 0.2 m crash
+        threshold, 5 Hz communication, and a 15-step/3-second prediction horizon
+      source: 'dmpc-config: simulation and controller options'
+    native_result:
+      status: not-reported
+      value: No generated native result artifact is accepted into this catalog
+      source: 'dmpc-readme: repository overview contains setup but no reviewed result table'
+    comparability_note: >-
+      This is source-level native context, not a reproduced result. The Stage 8 clean-room DMPC
+      adaptation is compared numerically only inside the guarded common-environment track.
+
+controlled_methods:
+  - id: corrected-paper04-feedforward-mappo
+    label: Corrected Paper 04 feed-forward MAPPO
+    action_semantics: Normalized world-frame velocity components, scaled to m/s and tracked by PID
+    observation_access: Local assigned-target error, own velocity, neighbor relative states, and masks
+    execution: Decentralized parameter-shared actor; centralized critic is training-only
+  - id: dmpc-swarm-clean-room-adaptation
+    label: Clean-room DMPC-Swarm adaptation
+    action_semantics: Receding-horizon position/velocity references, tracked by the identical PID path
+    observation_access: Shared positions, velocities, assigned targets, and stable agent identities
+    execution: One optimization per UAV from a synchronous shared snapshot
+
+expected_tasks:
+  - paper04-3uav
+  - paper04-4uav
+  - paper04-5uav
+
+metrics:
+  - collision_free_success
+  - collision_any
+  - final_normalized_shape_rmse
+  - final_position_rmse_m
+  - minimum_clearance_m
+  - mean_agent_path_length_m
+  - control_delta_rms
