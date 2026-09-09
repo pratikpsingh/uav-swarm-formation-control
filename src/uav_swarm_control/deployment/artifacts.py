@@ -2,17 +2,22 @@
 
 import copy
 import hashlib
+import importlib
 import json
 import subprocess
 import sys
 import warnings
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
 import torch
 from torch import Tensor, nn
 
-from uav_swarm_control.deployment.contracts import DeploymentArchitecture
+from uav_swarm_control.deployment.contracts import (
+    DeploymentActionProfile,
+    DeploymentArchitecture,
+)
 from uav_swarm_control.evaluation.artifacts import save_json_artifact
 
 
@@ -35,13 +40,15 @@ def quantize_int8_dynamic(model: nn.Module) -> nn.Module:
                 message="Deprecation: PlainLayout is deprecated.*",
                 module=r"torchao\.dtypes\.utils",
             )
-            from torchao.quantization import (  # pyright: ignore[reportMissingTypeStubs]
-                Int8DynamicActivationInt8WeightConfig,
-                quantize_,
+            module = importlib.import_module("torchao.quantization")
+            config_type = cast(
+                Callable[[], object],
+                module.Int8DynamicActivationInt8WeightConfig,
             )
+            quantize = cast(Callable[[nn.Module, object], None], module.quantize_)
 
             quantized = copy.deepcopy(model).eval()
-            quantize_(quantized, Int8DynamicActivationInt8WeightConfig())
+            quantize(quantized, config_type())
     except ImportError as error:
         raise RuntimeError("INT8 candidates require `uv sync --extra deployment`.") from error
     return quantized
@@ -74,6 +81,7 @@ def export_actor(
     candidate: str,
     quantization: str,
     structured_zero_channel_fraction: float,
+    action_profile: DeploymentActionProfile = DeploymentActionProfile.NORMALIZED_VELOCITY,
 ) -> tuple[Path, dict[str, object]]:
     """Export an actor graph and verify the saved graph reproduces the source output."""
     directory.mkdir(parents=True, exist_ok=False)
@@ -81,9 +89,7 @@ def export_actor(
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore",
-            message=(
-                "The tensor attributes self.recurrent._flat_weights.*were assigned during export.*"
-            ),
+            message=(r"The tensor attributes self\..*_flat_weights.*were assigned during export.*"),
             module="contextlib",
         )
         warnings.filterwarnings(
@@ -116,11 +122,17 @@ def export_actor(
     maximum_error = float((source_action - restored_action).abs().max().item())
     if maximum_error > 1e-5:
         raise RuntimeError("exported actor does not reproduce the in-memory actor.")
+    recurrent_state_tensors = {
+        DeploymentArchitecture.FEED_FORWARD: 0,
+        DeploymentArchitecture.GRU: 1,
+        DeploymentArchitecture.LSTM: 2,
+    }[architecture]
     metadata: dict[str, object] = {
         "artifact_schema_version": 1,
         "candidate": candidate,
         "architecture": architecture.value,
         "quantization": quantization,
+        "action_profile": DeploymentActionProfile(action_profile).value,
         "structured_zero_channel_fraction": structured_zero_channel_fraction,
         "contains_centralized_critic": False,
         "format": "torch.export ExportedProgram",
@@ -141,6 +153,7 @@ def export_actor(
         },
         "parameter_count": count_parameters(model),
         "logical_parameter_bytes": parameter_storage_bytes(model),
+        "logical_recurrent_state_bytes_per_agent": (recurrent_state_tensors * recurrent_width * 4),
         "artifact_bytes": artifact.stat().st_size,
         "flash_proxy_bytes": artifact.stat().st_size,
         "export_maximum_absolute_error": maximum_error,

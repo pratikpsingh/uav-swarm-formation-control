@@ -6,7 +6,11 @@ import numpy as np
 import torch
 from torch import Tensor, nn
 
-from uav_swarm_control.deployment.contracts import DeploymentArchitecture
+from uav_swarm_control.actions import DirectionSpeedActions, direction_speed_to_normalized_velocity
+from uav_swarm_control.deployment.contracts import (
+    DeploymentActionProfile,
+    DeploymentArchitecture,
+)
 from uav_swarm_control.environments.contracts import NormalizedVelocityActions
 from uav_swarm_control.models._networks import build_mlp
 from uav_swarm_control.models.neighbor_encoder import (
@@ -114,9 +118,20 @@ DeploymentActor = CompactFeedForwardActor | CompactGRUActor | CompactLSTMActor
 class DeploymentController:
     """Adapt compact actors to the environment and reset state at episode boundaries."""
 
-    def __init__(self, model: nn.Module, architecture: DeploymentArchitecture) -> None:
+    def __init__(
+        self,
+        model: nn.Module,
+        architecture: DeploymentArchitecture,
+        *,
+        action_profile: DeploymentActionProfile = DeploymentActionProfile.NORMALIZED_VELOCITY,
+        direction_epsilon: float = 1e-6,
+    ) -> None:
+        if direction_epsilon <= 0.0:
+            raise ValueError("direction_epsilon must be positive.")
         self.model = model
-        self.architecture = architecture
+        self.architecture = DeploymentArchitecture(architecture)
+        self.action_profile = DeploymentActionProfile(action_profile)
+        self.direction_epsilon = direction_epsilon
         self._hidden: Tensor | None = None
         self._cell: Tensor | None = None
 
@@ -146,4 +161,9 @@ class DeploymentController:
                     )
                 actions = output[:, 0]
         array = actions.detach().cpu().numpy().astype(np.float32)
+        if self.action_profile is DeploymentActionProfile.DIRECTION_SPEED:
+            return direction_speed_to_normalized_velocity(
+                DirectionSpeedActions(observations.agent_ids, array),
+                direction_epsilon=self.direction_epsilon,
+            )
         return NormalizedVelocityActions(observations.agent_ids, array)

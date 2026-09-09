@@ -32,6 +32,7 @@ from uav_swarm_control.configuration import (
     load_obstacle_experiment_config,
     load_ppo_experiment_config,
     load_pybullet_experiment_config,
+    load_recurrent_study_config,
 )
 from uav_swarm_control.configuration.baseline import load_baseline_config
 from uav_swarm_control.controllers.proportional import ProportionalPositionController
@@ -50,6 +51,15 @@ from uav_swarm_control.logging import LogLevel, configure_logging
 from uav_swarm_control.seeding import RandomStream, derive_seed
 
 LOGGER = logging.getLogger(__name__)
+_RECURRENT_TREATMENTS = (
+    "base",
+    "pooled-formations",
+    "mission",
+    "obstacles",
+    "neighbors",
+    "recovery",
+    "morphing",
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -194,6 +204,46 @@ def build_parser() -> argparse.ArgumentParser:
         help="skip matching completed seeds; does not resume optimizer state",
     )
     communication.add_argument("--torch-threads", type=int, default=1)
+    recurrent = commands.add_parser(
+        "run-recurrent-study",
+        help="run paper-aligned recurrent MAPPO research treatments",
+    )
+    recurrent.add_argument("--config", type=Path, action="append", required=True)
+    recurrent.add_argument(
+        "--treatment",
+        choices=_RECURRENT_TREATMENTS,
+        action="append",
+        help="treatment to run; repeat as needed (default: all)",
+    )
+    recurrent.add_argument("--output", type=Path, default=Path("artifacts/recurrent"))
+    recurrent.add_argument("--project-root", type=Path, default=Path.cwd())
+    recurrent.add_argument(
+        "--smoke",
+        action="store_true",
+        help="retain treatments and seeds with a bounded plumbing-only budget",
+    )
+    recurrent.add_argument(
+        "--resume",
+        action="store_true",
+        help="skip matching completed seeds; does not resume optimizer state",
+    )
+    recurrent.add_argument("--torch-threads", type=int, default=1)
+    recurrent_deployment = commands.add_parser(
+        "run-recurrent-deployment-study",
+        help="distill and benchmark compact actors from a recurrent teacher",
+    )
+    recurrent_deployment.add_argument("--task", type=Path, required=True)
+    recurrent_deployment.add_argument("--deployment", type=Path, required=True)
+    recurrent_deployment.add_argument("--teacher-checkpoint", type=Path, required=True)
+    recurrent_deployment.add_argument("--teacher-result", type=Path, required=True)
+    recurrent_deployment.add_argument("--output", type=Path, default=Path("artifacts/deployment"))
+    recurrent_deployment.add_argument("--project-root", type=Path, default=Path.cwd())
+    recurrent_deployment.add_argument(
+        "--smoke",
+        action="store_true",
+        help="use bounded trajectory, distillation, evaluation, and benchmark budgets",
+    )
+    recurrent_deployment.add_argument("--torch-threads", type=int, default=1)
     deployment = commands.add_parser(
         "run-deployment-study",
         help="compress a validated neighbor-study teacher and benchmark actor-only artifacts",
@@ -423,6 +473,81 @@ def main(argv: Sequence[str] | None = None) -> None:
                     obstacle_config.profile,
                     summary_path,
                 )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            parser.error(str(error))
+        finally:
+            torch.set_num_threads(previous_threads)
+        return
+    if args.command == "run-recurrent-study":
+        if args.torch_threads < 1:
+            parser.error("--torch-threads must be positive.")
+        previous_threads = torch.get_num_threads()
+        try:
+            torch.set_num_threads(args.torch_threads)
+            from uav_swarm_control.evaluation.recurrent_study import (
+                RecurrentTreatment,
+                recurrent_study_smoke_config,
+                run_recurrent_study,
+            )
+
+            configurations = [load_recurrent_study_config(path) for path in args.config]
+            treatment_names = args.treatment or list(_RECURRENT_TREATMENTS)
+            treatments = tuple(dict.fromkeys(RecurrentTreatment(name) for name in treatment_names))
+            for recurrent_config in configurations:
+                if args.smoke:
+                    recurrent_config = recurrent_study_smoke_config(recurrent_config)
+                for treatment in treatments:
+                    summary_path = run_recurrent_study(
+                        recurrent_config,
+                        treatment,
+                        args.output,
+                        project_root=args.project_root.resolve(),
+                        resume=args.resume,
+                    )
+                    LOGGER.info(
+                        "Recurrent study complete: profile=%s treatment=%s summary=%s",
+                        recurrent_config.communication.profile,
+                        treatment.value,
+                        summary_path,
+                    )
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            parser.error(str(error))
+        finally:
+            torch.set_num_threads(previous_threads)
+        return
+    if args.command == "run-recurrent-deployment-study":
+        if args.torch_threads < 1:
+            parser.error("--torch-threads must be positive.")
+        previous_threads = torch.get_num_threads()
+        try:
+            torch.set_num_threads(args.torch_threads)
+            task = load_recurrent_study_config(args.task)
+            study = load_deployment_study_config(args.deployment)
+            if args.smoke:
+                from uav_swarm_control.configuration.deployment import deployment_smoke_config
+                from uav_swarm_control.evaluation.recurrent_study import (
+                    recurrent_study_smoke_config,
+                )
+
+                task = recurrent_study_smoke_config(task)
+                study = deployment_smoke_config(study)
+            from uav_swarm_control.evaluation.recurrent_deployment import (
+                run_recurrent_deployment_study,
+            )
+
+            summary_path = run_recurrent_deployment_study(
+                task,
+                study,
+                args.teacher_checkpoint,
+                args.teacher_result,
+                args.output,
+                project_root=args.project_root.resolve(),
+            )
+            LOGGER.info(
+                "Recurrent deployment study complete: profile=%s summary=%s",
+                study.profile,
+                summary_path,
+            )
         except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
             parser.error(str(error))
         finally:

@@ -1,88 +1,107 @@
 # Experiment configuration
 
-Configuration files will describe experiments without hiding scientific choices in Python scripts.
-They will be grouped by responsibility:
+Configuration files make scientific choices inspectable without reading implementation code.
 
 ```text
 configs/
-├── algorithm/     Optimizer, network, rollout, and update settings
-├── comparison/    Native evidence catalogs and controlled report contracts
-├── deployment/    Compression candidates, gates, and measurement protocols
-├── environment/   Simulator, dynamics, timing, and world settings
-├── experiment/    Reproducible compositions of the other configuration groups
-└── task/          Formation, goal, obstacle, observation, and reward settings
+├── algorithm/     controller-specific optimization settings
+├── comparison/    evidence catalogs and comparison contracts
+├── deployment/    compression candidates, gates, and measurements
+├── environment/   reserved for reusable simulator definitions
+├── experiment/    complete runnable experiment definitions
+└── task/          reserved for reusable task definitions
 ```
 
-Stage 2 uses immutable Python dataclasses as the schema and PyYAML's safe loader for serialization.
-Unknown keys and invalid cross-field combinations are rejected. Each experiment is currently one
-self-contained YAML file, making every scientific choice visible without following an inheritance
-graph.
+Current experiments are self-contained YAML files. Immutable Python dataclasses provide the schema,
+and PyYAML's safe loader handles serialization. Unknown fields and invalid cross-field combinations
+are rejected.
 
-The first schema contains:
+## How configurations become experiments
 
-- schema_version, experiment name, and root seed;
-- formation kind, count, spacing, center, and Euler orientation;
-- control time step, episode horizon, and per-axis velocity limit;
-- maximum neighbor slots and an optional sensing radius.
-- initial-state sampling, success, and collision rules;
-- explicit reward-component weights;
-- the scripted proportional-controller gain.
-- for physics runs, the drone model, physics mode, physics/control rates, GUI, and recording flags.
+A YAML file describes *what* to run: formation, simulator, reward, training budget, seeds, evaluation
+conditions, and profile. The CLI command selects *which runner* interprets that file and *where* its
+artifacts are stored. One YAML file can expand into several regimens, conditions, and five separately
+trained policies, so one command does not necessarily mean one model.
 
-See [experiment/triangle_kinematic.yaml](experiment/triangle_kinematic.yaml) for a complete example.
-The [PPO reference experiment](experiment/ppo_continuous_bandit.yaml) adds validated rollout,
-optimization, network, device, and evaluation settings. The
-[MAPPO reference experiment](experiment/mappo_triangle_kinematic.yaml) combines those settings with
-the kinematic task, parallel-environment count, and centralized-critic widths. A composition
-framework will be considered only after repeated configurations create demonstrated duplication.
-Local machine overrides should use the suffix .local.yaml, which Git ignores.
+Do not edit a YAML file after a frozen campaign starts. Copy it to a new descriptive file, change its
+internal `name`, commit the change, and use a new run tag. See the experiment runbook for the safe
+execution order, parallelization rules, and expected artifact paths.
 
-The PyBullet smoke gates are [one-drone hover](experiment/pybullet_hover.yaml) and
-[three-drone formation](experiment/pybullet_triangle.yaml). Their environment timestep must equal
-the reciprocal of the controller frequency, while the physics frequency must be an integer multiple
-of that rate.
+## Reference experiments
 
-The `experiment/baseline/triangle-3-uav.yaml`, `experiment/baseline/square-4-uav.yaml`, and `experiment/baseline/pentagon-5-uav.yaml` experiments combine the
-MAPPO and PyBullet schemas with a strict `protocol` section containing five independent training
-seeds, an evaluation seed, and a profile label. Use `run-baseline --smoke` for a bounded local
-check; the unmodified research budgets are large. See [the baseline protocol](../docs/mappo-baseline.md).
+- `triangle_kinematic.yaml`: deterministic multi-agent kinematic task.
+- `ppo_continuous_bandit.yaml`: small continuous-action PPO reference.
+- `mappo_triangle_kinematic.yaml`: parameter-shared MAPPO reference.
+- `pybullet_hover.yaml`: one-UAV physical adapter check.
+- `pybullet_triangle.yaml`: three-UAV scripted physical check.
 
-The classical controller is configured independently in
-[algorithm/dmpc.yaml](algorithm/dmpc.yaml). It exposes every horizon, planning-rate,
-cost, physical-limit and solver-tolerance choice and rejects missing or unknown keys. `run-dmpc`
-composes that controller configuration with one or more baseline task files at runtime. This keeps
-the environment protocol identical while preventing controller settings from being duplicated in
-each 3/4/5-UAV task. See [the DMPC protocol](../docs/dmpc-baseline.md).
+## Feed-forward physical baseline
 
-The four files under `experiment/pose-generalization/` define plane, pyramid, cube, and sphere generalization tasks.
-Each contains two non-overlapping seven-dimensional target-pose boxes: three translation offsets,
-three Euler-angle offsets, and one positive scale. They also declare assignment and coordinate-frame
-variants, five independent training seeds, and a separate evaluation root seed. The cube task carries
-the full 2x2 assignment/frame ablation; the other formations use the selected `minimum-target`
-variant. The source configurations are research budgets. `run-generalization --smoke` creates an
-explicit bounded copy without changing the source YAML. See
-[the 3D generalization protocol](../docs/3d-generalization.md).
+```text
+experiment/baseline/
+├── triangle-3-uav.yaml
+├── square-4-uav.yaml
+└── pentagon-5-uav.yaml
+```
 
-`experiment/obstacle-avoidance/plane-4-uav.yaml` freezes the four-UAV controlled obstacle study. It declares
-the oracle sphere distribution, sensing and safety bounds, one fixed pose range and representation,
-three equal-budget training regimens, all four matched evaluation scenarios, and five training
-seeds. `run-obstacle-study --smoke` reduces only runtime-related values. See
-[the dynamic-obstacle protocol](../docs/dynamic-obstacles.md).
+Each file declares physics, task, MAPPO, five training seeds, a separate evaluation root, and a
+research profile. The configured budgets are large. Research commands use these budgets unchanged;
+the optional CLI smoke profile is only for software verification.
 
-The two files under `experiment/neighbor-study/` freeze the four-UAV plane and five-UAV pyramid communication
-studies. Each crosses requested neighbor count, finite/unlimited sensing, and clear/mixed-dynamic
-obstacles; defines fixed-two, fixed-all, and variable-topology training distributions; retains five
-independent training seeds; and fixes a 24-byte relative-state payload model. Use the
-run-communication-study command with its smoke option for bounded plumbing validation. See
-[the neighbor protocol](../docs/communication-study.md).
+## DMPC
 
-`deployment/policy-compression.yaml` declares the teacher acceptance gates, three
-feed-forward widths, GRU/LSTM comparison, structured-pruning and INT8 treatments, five
-distillation seeds, episode-level dataset split, host benchmark protocol, and energy measurement
-status. The deployment config is composed with exactly one neighbor-study task and matching teacher
-checkpoint/result pair at runtime. See [the compression protocol](../docs/policy-compression.md).
+`algorithm/dmpc.yaml` contains the horizon, planning rate, objective weights, physical limits, and
+solver tolerances. The `run-dmpc` command combines it with one or more baseline task files so MAPPO
+and DMPC use the same task protocol.
 
-`comparison/cross-paper.yaml` is a strict, checksum-backed evidence catalog for Papers 01-04
-and native DMPC plus the contract for normalized common-environment result tables. Missing simulator,
-seed, or uncertainty evidence is represented explicitly instead of inferred. See
-[the cross-paper protocol](../docs/cross-paper-comparison.md).
+## Pose generalization
+
+Files under `experiment/pose-generalization/` declare plane, pyramid, cube, and sphere tasks. They
+include disjoint training/evaluation pose boxes and assignment/coordinate-frame variants.
+
+The feed-forward generalization runner trains separate policies. The recurrent study implements a
+pooled equal-size plane/pyramid/cube/sphere treatment; it remains an experimental capability until
+full-budget results pass the predeclared metrics.
+
+## Obstacle avoidance
+
+`experiment/obstacle-avoidance/plane-4-uav.yaml` defines a four-UAV oracle-sphere study with
+no-obstacle, static-obstacle, and curriculum training regimens evaluated on paired clear/static/
+dynamic scenarios.
+
+## Neighbor topology
+
+Files under `experiment/neighbor-study/` define four-UAV plane and five-UAV pyramid tasks. They cross
+requested neighbor count, finite/unlimited range, and clear/mixed-dynamic conditions while recording
+actual graph metrics and a 24-byte relative-state payload model.
+
+Files under `experiment/neighbor-scaling/` hold the sphere formation family and physical settings
+fixed while crossing `N={4,8,16,32}` with declared `k` grids. They are the controlled feed-forward
+suite for estimating the relationship among swarm size, visible neighbors, graph structure,
+communication payload, formation error, success, and collision rate.
+
+## Recurrent research study
+
+`experiment/recurrent-study/sphere-8-uav.yaml` defines the shared 8-UAV FC-LSTM-FC MAPPO protocol.
+The runner exposes `base`, `pooled-formations`, `mission`, `obstacles`, `neighbors`, `recovery`, and
+`morphing` treatments without changing the frozen training seeds or held-out evaluation root.
+
+## Compression
+
+`deployment/policy-compression.yaml` defines teacher acceptance gates, feed-forward and recurrent
+student candidates, pruning/quantization treatments, distillation seeds, dataset split, and host
+benchmark settings.
+
+## Cross-system evidence
+
+`comparison/cross-paper.yaml` records checksum-backed native evidence and the contract for controlled
+MAPPO/DMPC result tables. Native-system numbers remain separate from common-environment comparisons.
+
+## Safe modification
+
+Copy the nearest experiment to a descriptively named file, change its internal `name`, modify one
+scientific factor, retain a control, smoke-check it, and use a new artifact output. Files ending in
+`.local.yaml` are ignored and must not be the sole record of a published run.
+
+See [configuration documentation](../docs/configuration.md) and
+[experiment commands](../docs/experiments.md).

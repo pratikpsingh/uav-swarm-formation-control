@@ -11,4 +11,11 @@ class DeploymentArchitecture(StrEnum):
     LSTM = "lstm"
 
 
-__all__ = ["DeploymentArchitecture"]
+class DeploymentActionProfile(StrEnum):
+    """How bounded actor outputs are converted to normalized velocity commands."""
+
+    NORMALIZED_VELOCITY = "normalized-velocity"
+    DIRECTION_SPEED = "direction-speed"
+
+
+__all__ = ["DeploymentActionProfile", "DeploymentArchitecture"]

@@ -11,6 +11,7 @@ from uav_swarm_control.configuration import (
     DeploymentStudyConfig,
     GeneralizationConfig,
     ObstacleExperimentConfig,
+    RecurrentStudyConfig,
 )
 
 
@@ -405,3 +406,106 @@ def test_cli_applies_bounded_deployment_smoke_profile(
     assert len(study.candidates) == 7
     assert len(study.distillation_seeds) == 5
     assert "Deployment study complete" in capsys.readouterr().err
+
+
+def test_cli_runs_selected_recurrent_treatments_with_smoke_profile(
+    tmp_path: Path, capsys: CaptureFixture[str], monkeypatch: MonkeyPatch
+) -> None:
+    from uav_swarm_control.evaluation import recurrent_study
+
+    calls: list[tuple[RecurrentStudyConfig, recurrent_study.RecurrentTreatment, Path, bool]] = []
+
+    def fake_run(
+        config: RecurrentStudyConfig,
+        treatment: recurrent_study.RecurrentTreatment,
+        output: Path,
+        *,
+        project_root: Path,
+        resume: bool = False,
+    ) -> Path:
+        del project_root
+        calls.append((config, treatment, output, resume))
+        return output / treatment.value / "summary.json"
+
+    monkeypatch.setattr(recurrent_study, "run_recurrent_study", fake_run)
+    root = Path(__file__).parents[1]
+    output = tmp_path / "recurrent"
+    main(
+        [
+            "run-recurrent-study",
+            "--config",
+            str(root / "configs/experiment/recurrent-study/sphere-8-uav.yaml"),
+            "--treatment",
+            "pooled-formations",
+            "--treatment",
+            "morphing",
+            "--smoke",
+            "--resume",
+            "--output",
+            str(output),
+            "--project-root",
+            str(root),
+        ]
+    )
+
+    assert [item[1] for item in calls] == [
+        recurrent_study.RecurrentTreatment.POOLED_FORMATIONS,
+        recurrent_study.RecurrentTreatment.MORPHING,
+    ]
+    assert all(item[0].communication.profile == "smoke" for item in calls)
+    assert all(item[0].recurrent.mappo.ppo.total_steps == 128 for item in calls)
+    assert all(item[2] == output and item[3] for item in calls)
+    assert capsys.readouterr().err.count("Recurrent study complete") == 2
+
+
+def test_cli_applies_bounded_recurrent_deployment_profile(
+    tmp_path: Path, capsys: CaptureFixture[str], monkeypatch: MonkeyPatch
+) -> None:
+    from uav_swarm_control.evaluation import recurrent_deployment
+
+    calls: list[tuple[RecurrentStudyConfig, DeploymentStudyConfig]] = []
+
+    def fake_run(
+        task: RecurrentStudyConfig,
+        study: DeploymentStudyConfig,
+        checkpoint: Path,
+        teacher_result: Path,
+        output: Path,
+        *,
+        project_root: Path,
+    ) -> Path:
+        del checkpoint, teacher_result, project_root
+        calls.append((task, study))
+        return output / "summary.json"
+
+    monkeypatch.setattr(
+        recurrent_deployment,
+        "run_recurrent_deployment_study",
+        fake_run,
+    )
+    root = Path(__file__).parents[1]
+    main(
+        [
+            "run-recurrent-deployment-study",
+            "--task",
+            str(root / "configs/experiment/recurrent-study/sphere-8-uav.yaml"),
+            "--deployment",
+            str(root / "configs/deployment/policy-compression.yaml"),
+            "--teacher-checkpoint",
+            str(tmp_path / "model.pt"),
+            "--teacher-result",
+            str(tmp_path / "result.json"),
+            "--output",
+            str(tmp_path / "deployment"),
+            "--project-root",
+            str(root),
+            "--smoke",
+        ]
+    )
+
+    assert len(calls) == 1
+    task, study = calls[0]
+    assert task.communication.profile == study.profile == "smoke"
+    assert task.recurrent.mappo.ppo.total_steps == 128
+    assert len(study.candidates) == 7
+    assert "Recurrent deployment study complete" in capsys.readouterr().err

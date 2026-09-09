@@ -90,6 +90,21 @@ from uav_swarm_control.configuration.pybullet import (
     pybullet_experiment_config_from_mapping,
     pybullet_experiment_config_to_dict,
 )
+from uav_swarm_control.configuration.recurrent_mappo import (
+    RecurrentMAPPOConfig,
+    RecurrentMAPPOExperimentConfig,
+    RecurrentObservationProfile,
+    load_recurrent_mappo_experiment_config,
+    recurrent_mappo_experiment_config_from_mapping,
+)
+from uav_swarm_control.configuration.recurrent_study import (
+    MissionStudyConfig,
+    MorphingStudyConfig,
+    RecoveryStudyConfig,
+    RecurrentStudyConfig,
+    load_recurrent_study_config,
+    recurrent_study_config_from_mapping,
+)
 
 __all__ = [
     "AssignmentMode",
@@ -120,6 +135,8 @@ __all__ = [
     "KinematicTaskConfig",
     "MAPPOConfig",
     "MAPPOExperimentConfig",
+    "MissionStudyConfig",
+    "MorphingStudyConfig",
     "NativeSystemEvidence",
     "NeighborEncoderConfig",
     "ObservationConfig",
@@ -132,6 +149,11 @@ __all__ = [
     "PyBulletExperimentConfig",
     "PyBulletPhysics",
     "PyBulletSimulatorConfig",
+    "RecoveryStudyConfig",
+    "RecurrentMAPPOConfig",
+    "RecurrentMAPPOExperimentConfig",
+    "RecurrentObservationProfile",
+    "RecurrentStudyConfig",
     "RewardConfig",
     "TeacherConditionGate",
     "TrainingRole",
@@ -153,11 +175,15 @@ __all__ = [
     "load_obstacle_experiment_config",
     "load_ppo_experiment_config",
     "load_pybullet_experiment_config",
+    "load_recurrent_mappo_experiment_config",
+    "load_recurrent_study_config",
     "mappo_experiment_config_from_mapping",
     "obstacle_experiment_config_from_mapping",
     "ppo_config_from_mapping",
     "ppo_experiment_config_from_mapping",
     "pybullet_experiment_config_from_mapping",
     "pybullet_experiment_config_to_dict",
+    "recurrent_mappo_experiment_config_from_mapping",
+    "recurrent_study_config_from_mapping",
     "scenario_for_progress",
 ]

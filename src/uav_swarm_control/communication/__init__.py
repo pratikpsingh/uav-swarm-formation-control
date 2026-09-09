@@ -10,12 +10,18 @@ from uav_swarm_control.communication.models import (
     CommunicationRegimen,
     CommunicationRegimenKind,
 )
+from uav_swarm_control.communication.scaling import (
+    NeighborScalingCondition,
+    neighbor_scaling_grid,
+)
 
 __all__ = [
     "CommunicationCondition",
     "CommunicationGraphMetrics",
     "CommunicationRegimen",
     "CommunicationRegimenKind",
+    "NeighborScalingCondition",
     "build_neighbor_adjacency",
     "communication_graph_metrics",
+    "neighbor_scaling_grid",
 ]
